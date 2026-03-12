@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { C, Department } from "@/lib/types";
+import { C, Department, Contract } from "@/lib/types";
 import { calcInsurance, calcIsTokutei, calcDocumentType, documentTypeLabel } from "@/lib/insurance";
 import { FormField, SmallInput, CheckField, SelectField, RadioGroup } from "./FormParts";
 import { User } from "firebase/auth";
@@ -162,7 +162,7 @@ export default function ContractForm({ user, departments, allContracts, onClose 
   }, [form.basicSalary, form.hourlyWage, form.fixedOvertimeAmount, form.commuteAllowance, form.salaryType, form.weeklyHours]);
 
   // 社保・雇用保険の自動判定
-  const isTokutei = calcIsTokutei(allContracts as any);
+  const isTokutei = calcIsTokutei(allContracts as Contract[]);
   const autoInsurance = calcInsurance(
     { weeklyHours: form.weeklyHours, totalSalary: form.totalSalary, studentType: form.studentType },
     isTokutei
