@@ -13,6 +13,7 @@ import { C, Department, Employee, Contract } from "@/lib/types";
 import { documentTypeLabel } from "@/lib/insurance";
 import { FormField, SmallInput, CheckField } from "@/components/FormParts";
 import ContractForm from "@/components/ContractForm";
+import ContractPreview from "@/components/ContractPreview";
 import { calcAlerts, Alert } from "@/lib/alerts";
 
 export default function DashboardPage() {
@@ -37,6 +38,7 @@ function DashboardContent() {
   const [showEmpForm, setShowEmpForm] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [showContractForm, setShowContractForm] = useState(false);
+  const [previewContract, setPreviewContract] = useState<Contract | null>(null);
   const [searchText, setSearchText] = useState("");
   const [filterDept, setFilterDept] = useState("");
   const [filterStatus, setFilterStatus] = useState("active");
@@ -470,6 +472,7 @@ function DashboardContent() {
                           ) : (
                             <span style={{ fontSize: 11, color: C.red, fontWeight: 600 }}>未送信</span>
                           )}
+                          <button onClick={(e) => { e.stopPropagation(); setPreviewContract(c); }} style={{ padding: "3px 10px", fontSize: 11, color: C.navy, background: C.pale, border: "none", borderRadius: 4, cursor: "pointer" }}>プレビュー</button>
                           <button style={{ padding: "3px 10px", fontSize: 11, color: C.navy, background: C.pale, border: "none", borderRadius: 4, cursor: "pointer" }}>PDF</button>
                         </div>
                       </div>
@@ -571,6 +574,16 @@ function DashboardContent() {
           previousContract={selectedContracts[0]}
           onClose={() => setShowContractForm(false)}
           onSaved={() => setShowContractForm(false)}
+        />
+      )}
+
+      {/* 契約プレビューモーダル */}
+      {previewContract && selectedEmployee && (
+        <ContractPreview
+          contract={previewContract}
+          employee={selectedEmployee}
+          department={departments.find((d) => d.id === selectedEmployee.companyId)}
+          onClose={() => setPreviewContract(null)}
         />
       )}
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { C, Department, Contract, Employee } from "@/lib/types";
 import { calcInsurance, calcIsTokutei, calcDocumentType, documentTypeLabel } from "@/lib/insurance";
 import { FormField, SmallInput, CheckField, SelectField, RadioGroup } from "./FormParts";
+import ContractPreview from "./ContractPreview";
 import { User } from "firebase/auth";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -75,6 +76,7 @@ const thisDay = String(now.getDate());
 
 export default function ContractForm({ user, employee, department, allEmployees, allContracts, previousContract, onClose, onSaved }: Props) {
   const [step, setStep] = useState(1);
+  const [savedContract, setSavedContract] = useState<Contract | null>(null);
 
   // 前回の契約があればそれをベースに、なければデフォルト
   const [form, setForm] = useState<ContractFormData>(() => {
@@ -212,10 +214,21 @@ export default function ContractForm({ user, employee, department, allEmployees,
       updatedAt: serverTimestamp(),
     };
     const docRef = await addDoc(collection(db, "contracts"), data);
-    onSaved(docRef.id);
+    setSavedContract({ ...data, id: docRef.id } as Contract);
   };
 
   const stepTitles = ["雇用形態", "就業情報", "労働時間", "賃金・保険", "確認"];
+
+  if (savedContract) {
+    return (
+      <ContractPreview
+        contract={savedContract}
+        employee={employee}
+        department={department}
+        onClose={() => onSaved(savedContract.id)}
+      />
+    );
+  }
 
   return (
     <div
