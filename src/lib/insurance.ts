@@ -1,9 +1,10 @@
-import { Contract } from "./types";
+import { Employee, Contract } from "./types";
 
-// 特定適用事業所判定（週30時間以上が51人以上）
-export function calcIsTokutei(contracts: Contract[]): boolean {
+// 特定適用事業所判定（在職中かつ週30時間以上が51人以上）
+export function calcIsTokutei(employees: Employee[], contracts: Contract[]): boolean {
+  const activeEmpIds = new Set(employees.filter((e) => e.status === "active").map((e) => e.id));
   const count = contracts.filter(
-    (c) => c.status === "active" && c.weeklyHours >= 30
+    (c) => activeEmpIds.has(c.employeeId) && c.weeklyHours >= 30
   ).length;
   return count >= 51;
 }

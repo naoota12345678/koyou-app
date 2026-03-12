@@ -20,13 +20,28 @@ export type Department = {
   updatedAt: unknown;
 };
 
+export type Employee = {
+  id: string;
+  userId: string;
+  companyId: string;
+  employeeNumber: string;
+  name: string;
+  email: string;
+  status: string; // active | leave | retired
+  retiredAt: unknown;
+  retirementReason: string;
+  retirementRemarks: string;
+  createdAt: unknown;
+  updatedAt: unknown;
+};
+
 export type Contract = {
   id: string;
   userId: string;
   companyId: string;
+  employeeId: string;
   documentType: string;
   // STEP1: 基本情報
-  employeeName: string;
   issueDateYear: string;
   issueDateMonth: string;
   issueDateDay: string;
@@ -81,11 +96,10 @@ export type Contract = {
   studentType: string;
   recruitmentSource: string;
   remarks: string;
-  // 在籍ステータス
-  status: string;
-  retiredAt: unknown;
-  retirementReason: string;
-  retirementRemarks: string;
+  // 送信管理
+  sentAt: unknown;
+  sentTo: string;
+  // タイムスタンプ
   createdAt: unknown;
   updatedAt: unknown;
 };
