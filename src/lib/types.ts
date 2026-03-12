@@ -5,16 +5,7 @@ export type Company = {
   address: string;
   representative: string;
   phone: string;
-  createdAt: unknown;
-  updatedAt: unknown;
-};
-
-export type Department = {
-  id: string;
-  userId: string;
-  name: string;
-  address: string;
-  representative: string;
+  // 労働条件デフォルト
   defaultStartHour: string;
   defaultStartMinute: string;
   defaultEndHour: string;
@@ -31,10 +22,23 @@ export type Department = {
   updatedAt: unknown;
 };
 
+export type Department = {
+  id: string;
+  userId: string;
+  name: string;
+  address: string; // 就業場所
+  startHour: string;
+  startMinute: string;
+  endHour: string;
+  endMinute: string;
+  createdAt: unknown;
+  updatedAt: unknown;
+};
+
 export type Employee = {
   id: string;
   userId: string;
-  companyId: string;
+  departmentId: string; // 空文字 = 部署なし
   employeeNumber: string;
   name: string;
   email: string;
@@ -49,14 +53,14 @@ export type Employee = {
 export type Contract = {
   id: string;
   userId: string;
-  companyId: string;
+  departmentId: string;
   employeeId: string;
   documentType: string;
-  // STEP1: 基本情報
+  // 基本情報
   issueDateYear: string;
   issueDateMonth: string;
   issueDateDay: string;
-  // STEP2: 雇用形態・契約期間
+  // 雇用形態・契約期間
   employmentType: string;
   isYuki: boolean;
   isKoyou: boolean;
@@ -69,12 +73,12 @@ export type Contract = {
   renewalType: string;
   renewalJudgmentItems: string[];
   trialPeriodMonths: number;
-  // STEP3: 就業情報
+  // 就業情報
   workplaceInitial: string;
   workplaceRange: string;
   jobContentInitial: string;
   jobContentRange: string;
-  // STEP4: 労働時間
+  // 労働時間
   startHour: string;
   startMinute: string;
   endHour: string;
@@ -83,7 +87,7 @@ export type Contract = {
   weeklyDays: number;
   sideJobPolicy: string;
   teleworkAllowed: boolean;
-  // STEP5: 賃金
+  // 賃金
   salaryType: string;
   basicSalary: number;
   hourlyWage: number;

@@ -1,13 +1,12 @@
 "use client";
 
-import { C, Company, Contract, Employee, Department } from "@/lib/types";
+import { C, Company, Contract, Employee } from "@/lib/types";
 import { documentTypeLabel } from "@/lib/insurance";
 
 type Props = {
   contract: Contract;
   employee: Employee;
   company: Company | null;
-  department: Department | undefined;
   onClose: () => void;
 };
 
@@ -25,10 +24,10 @@ function salaryLabel(contract: Contract): string {
 
 const isKoyouType = (type: string) => type === "koyou_muki" || type === "koyou_yuki";
 
-export default function ContractPreview({ contract, employee, company, department, onClose }: Props) {
-  const companyName = company?.name || department?.name || "（事業所名）";
-  const companyAddress = company?.address || department?.address || "";
-  const companyRep = company?.representative || department?.representative || "";
+export default function ContractPreview({ contract, employee, company, onClose }: Props) {
+  const companyName = company?.name || "（事業所名）";
+  const companyAddress = company?.address || "";
+  const companyRep = company?.representative || "";
   const isKoyou = isKoyouType(contract.documentType);
   const isYuki = contract.isYuki;
   const title = isKoyou ? "雇用契約書" : "労働条件通知書";
@@ -264,8 +263,8 @@ export default function ContractPreview({ contract, employee, company, departmen
               {/* その他 */}
               <Section title="8. その他">
                 <div style={{ fontSize: 13 }}>雇用形態: {contract.employmentType || "-"}</div>
-                {department?.workRulesLocation && (
-                  <div style={{ fontSize: 13 }}>就業規則の確認: {department.workRulesLocation}</div>
+                {company?.workRulesLocation && (
+                  <div style={{ fontSize: 13 }}>就業規則の確認: {company.workRulesLocation}</div>
                 )}
                 {contract.remarks && (
                   <div style={{ fontSize: 13, marginTop: 4 }}>

@@ -97,15 +97,15 @@ export default function ContractForm({ user, employee, company, department, allE
       contractEndDay: "",
       renewalType: prev?.renewalType || "自動更新",
       trialPeriodMonths: prev?.trialPeriodMonths ?? 3,
-      workplaceInitial: prev?.workplaceInitial || department?.address || "",
+      workplaceInitial: prev?.workplaceInitial || department?.address || company?.address || "",
       workplaceRange: prev?.workplaceRange || "会社の定める事業所",
       jobContentInitial: prev?.jobContentInitial || "",
       jobContentRange: prev?.jobContentRange || "会社の定める業務",
-      startHour: prev?.startHour || department?.defaultStartHour || "9",
-      startMinute: prev?.startMinute || department?.defaultStartMinute || "00",
-      endHour: prev?.endHour || department?.defaultEndHour || "18",
-      endMinute: prev?.endMinute || department?.defaultEndMinute || "00",
-      weeklyHours: prev?.weeklyHours || department?.defaultWeeklyHours || 40,
+      startHour: prev?.startHour || department?.startHour || company?.defaultStartHour || "9",
+      startMinute: prev?.startMinute || department?.startMinute || company?.defaultStartMinute || "00",
+      endHour: prev?.endHour || department?.endHour || company?.defaultEndHour || "18",
+      endMinute: prev?.endMinute || department?.endMinute || company?.defaultEndMinute || "00",
+      weeklyHours: prev?.weeklyHours || company?.defaultWeeklyHours || 40,
       weeklyDays: prev?.weeklyDays || 5,
       sideJobPolicy: prev?.sideJobPolicy || "届出制",
       teleworkAllowed: prev?.teleworkAllowed ?? false,
@@ -116,11 +116,11 @@ export default function ContractForm({ user, employee, company, department, allE
       fixedOvertimeHours: prev?.fixedOvertimeHours || 0,
       commuteAllowance: prev?.commuteAllowance || 0,
       totalSalary: 0,
-      payClosingDay: prev?.payClosingDay || department?.payClosingDay || "末日",
-      paymentDay: prev?.paymentDay || department?.paymentDay || "翌月25日",
-      increment: prev?.increment ?? department?.incrementDefault ?? true,
-      bonus: prev?.bonus ?? department?.bonusDefault ?? true,
-      retirementAllowance: prev?.retirementAllowance ?? department?.retirementAllowanceDefault ?? false,
+      payClosingDay: prev?.payClosingDay || company?.payClosingDay || "末日",
+      paymentDay: prev?.paymentDay || company?.paymentDay || "翌月25日",
+      increment: prev?.increment ?? company?.incrementDefault ?? true,
+      bonus: prev?.bonus ?? company?.bonusDefault ?? true,
+      retirementAllowance: prev?.retirementAllowance ?? company?.retirementAllowanceDefault ?? false,
       retirementAllowanceDetail: prev?.retirementAllowanceDetail || "",
       studentType: prev?.studentType || "学生でない",
       recruitmentSource: prev?.recruitmentSource || "直接",
@@ -160,7 +160,7 @@ export default function ContractForm({ user, employee, company, department, allE
   const handleSave = async () => {
     const data = {
       userId: user.uid,
-      companyId: employee.companyId,
+      departmentId: employee.departmentId,
       employeeId: employee.id,
       documentType,
       issueDateYear: form.issueDateYear,
@@ -226,7 +226,6 @@ export default function ContractForm({ user, employee, company, department, allE
         contract={savedContract}
         employee={employee}
         company={company}
-        department={department}
         onClose={() => onSaved(savedContract.id)}
       />
     );

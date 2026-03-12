@@ -49,20 +49,22 @@ function DashboardContent() {
   const [showRetireModal, setShowRetireModal] = useState<Employee | null>(null);
   const [retireForm, setRetireForm] = useState({ retirementReason: "自己都合", retirementRemarks: "" });
 
-  // 新規従業員フォーム
-  const [empForm, setEmpForm] = useState({ name: "", employeeNumber: "", email: "", companyId: "" });
-
   // 会社情報フォーム
-  const [companyForm, setCompanyForm] = useState({ name: "", address: "", representative: "", phone: "" });
-  const [editingCompany, setEditingCompany] = useState(false);
-
-  // 部署フォーム
-  const [deptForm, setDeptForm] = useState({
-    name: "", address: "", representative: "",
+  const [companyForm, setCompanyForm] = useState({
+    name: "", address: "", representative: "", phone: "",
     defaultStartHour: "9", defaultStartMinute: "00", defaultEndHour: "18", defaultEndMinute: "00",
     defaultWeeklyHours: 40, payClosingDay: "末日", paymentDay: "翌月25日",
     incrementDefault: true, bonusDefault: true, retirementAllowanceDefault: false,
     retirementAllowanceDetail: "", workRulesLocation: "事務所内掲示",
+  });
+  const [editingCompany, setEditingCompany] = useState(false);
+
+  // 新規従業員フォーム
+  const [empForm, setEmpForm] = useState({ name: "", employeeNumber: "", email: "", departmentId: "" });
+
+  // 部署フォーム（シンプル）
+  const [deptForm, setDeptForm] = useState({
+    name: "", address: "", startHour: "", startMinute: "", endHour: "", endMinute: "",
   });
 
   // Firestoreリアルタイム監視
@@ -79,7 +81,7 @@ function DashboardContent() {
         setCompanyDocId(null);
       }
     }));
-    unsubs.push(onSnapshot(query(collection(db, "companies"), where("userId", "==", user.uid)), (snap) =>
+    unsubs.push(onSnapshot(query(collection(db, "departments"), where("userId", "==", user.uid)), (snap) =>
       setDepartments(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Department)))
     ));
     unsubs.push(onSnapshot(query(collection(db, "employees"), where("userId", "==", user.uid)), (snap) =>
@@ -112,13 +114,16 @@ function DashboardContent() {
   const empInsCount = activeEmployees.filter((e) => getLatestContract(e.id)?.employmentInsurance).length;
 
   // ヘルパー
-  const getDeptName = (id: string) => departments.find((d) => d.id === id)?.name || "-";
-  const getEmpContractCount = (deptId: string) => employees.filter((e) => e.companyId === deptId && e.status === "active").length;
+  const getDeptName = (id: string) => {
+    if (!id) return "-";
+    return departments.find((d) => d.id === id)?.name || "-";
+  };
+  const getEmpCount = (deptId: string) => employees.filter((e) => e.departmentId === deptId && e.status === "active").length;
 
   // 従業員フィルター
   const filteredEmployees = employees.filter((e) => {
     if (filterStatus && e.status !== filterStatus) return false;
-    if (filterDept && e.companyId !== filterDept) return false;
+    if (filterDept && e.departmentId !== filterDept) return false;
     if (searchText && !e.name?.includes(searchText) && !e.employeeNumber?.includes(searchText)) return false;
     return true;
   });
@@ -147,42 +152,54 @@ function DashboardContent() {
     setCompanyForm({
       name: company?.name || "", address: company?.address || "",
       representative: company?.representative || "", phone: company?.phone || "",
+      defaultStartHour: company?.defaultStartHour || "9", defaultStartMinute: company?.defaultStartMinute || "00",
+      defaultEndHour: company?.defaultEndHour || "18", defaultEndMinute: company?.defaultEndMinute || "00",
+      defaultWeeklyHours: company?.defaultWeeklyHours || 40,
+      payClosingDay: company?.payClosingDay || "末日", paymentDay: company?.paymentDay || "翌月25日",
+      incrementDefault: company?.incrementDefault ?? true, bonusDefault: company?.bonusDefault ?? true,
+      retirementAllowanceDefault: company?.retirementAllowanceDefault ?? false,
+      retirementAllowanceDetail: company?.retirementAllowanceDetail || "",
+      workRulesLocation: company?.workRulesLocation || "事務所内掲示",
     });
     setEditingCompany(true);
   };
 
-  // 部署CRUD
+  // 部署CRUD（シンプル）
   const resetDeptForm = () => {
-    setDeptForm({ name: "", address: "", representative: "", defaultStartHour: "9", defaultStartMinute: "00", defaultEndHour: "18", defaultEndMinute: "00", defaultWeeklyHours: 40, payClosingDay: "末日", paymentDay: "翌月25日", incrementDefault: true, bonusDefault: true, retirementAllowanceDefault: false, retirementAllowanceDetail: "", workRulesLocation: "事務所内掲示" });
+    setDeptForm({ name: "", address: "", startHour: "", startMinute: "", endHour: "", endMinute: "" });
     setEditDept(null); setShowDeptForm(false);
   };
   const saveDept = async () => {
     if (!user || !deptForm.name) return;
     const data = { ...deptForm, userId: user.uid, updatedAt: serverTimestamp() };
-    if (editDept) await updateDoc(doc(db, "companies", editDept.id), data);
-    else await addDoc(collection(db, "companies"), { ...data, createdAt: serverTimestamp() });
+    if (editDept) await updateDoc(doc(db, "departments", editDept.id), data);
+    else await addDoc(collection(db, "departments"), { ...data, createdAt: serverTimestamp() });
     resetDeptForm();
   };
-  const deleteDept = async (id: string) => { if (confirm("この部署を削除しますか？")) await deleteDoc(doc(db, "companies", id)); };
+  const deleteDept = async (id: string) => { if (confirm("この部署を削除しますか？")) await deleteDoc(doc(db, "departments", id)); };
   const startEditDept = (dept: Department) => {
     setEditDept(dept);
-    setDeptForm({ name: dept.name || "", address: dept.address || "", representative: dept.representative || "", defaultStartHour: dept.defaultStartHour || "9", defaultStartMinute: dept.defaultStartMinute || "00", defaultEndHour: dept.defaultEndHour || "18", defaultEndMinute: dept.defaultEndMinute || "00", defaultWeeklyHours: dept.defaultWeeklyHours || 40, payClosingDay: dept.payClosingDay || "末日", paymentDay: dept.paymentDay || "翌月25日", incrementDefault: dept.incrementDefault ?? true, bonusDefault: dept.bonusDefault ?? true, retirementAllowanceDefault: dept.retirementAllowanceDefault ?? false, retirementAllowanceDetail: dept.retirementAllowanceDetail || "", workRulesLocation: dept.workRulesLocation || "事務所内掲示" });
+    setDeptForm({
+      name: dept.name || "", address: dept.address || "",
+      startHour: dept.startHour || "", startMinute: dept.startMinute || "",
+      endHour: dept.endHour || "", endMinute: dept.endMinute || "",
+    });
     setShowDeptForm(true);
   };
 
   // 従業員追加
   const saveEmployee = async () => {
-    if (!user || !empForm.name || !empForm.companyId) { alert("氏名と部署は必須です"); return; }
+    if (!user || !empForm.name) { alert("氏名は必須です"); return; }
     const ref = await addDoc(collection(db, "employees"), {
       userId: user.uid, name: empForm.name, employeeNumber: empForm.employeeNumber,
-      email: empForm.email, companyId: empForm.companyId, status: "active",
+      email: empForm.email, departmentId: empForm.departmentId, status: "active",
       createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
     });
     setShowEmpForm(false);
-    setEmpForm({ name: "", employeeNumber: "", email: "", companyId: "" });
-    // 追加後すぐ選択して契約作成へ
-    const newEmp: Employee = { id: ref.id, userId: user.uid, name: empForm.name, employeeNumber: empForm.employeeNumber, email: empForm.email, companyId: empForm.companyId, status: "active", retiredAt: null, retirementReason: "", retirementRemarks: "", createdAt: null, updatedAt: null };
+    const newEmp: Employee = { id: ref.id, userId: user.uid, name: empForm.name, employeeNumber: empForm.employeeNumber, email: empForm.email, departmentId: empForm.departmentId, status: "active", retiredAt: null, retirementReason: "", retirementRemarks: "", createdAt: null, updatedAt: null };
+    setEmpForm({ name: "", employeeNumber: "", email: "", departmentId: "" });
     setSelectedEmployee(newEmp);
+    setPage("employees");
     setShowContractForm(true);
   };
 
@@ -218,6 +235,35 @@ function DashboardContent() {
     { key: "departments", label: "部署管理", icon: "🏢" },
     { key: "employees", label: "従業員一覧", icon: "👥" },
   ];
+
+  // 会社未登録時は会社登録を促す
+  if (!company && page !== "company") {
+    return (
+      <div style={{ display: "flex", minHeight: "100vh" }}>
+        <aside style={{ width: 220, background: C.navy, color: C.white, display: "flex", flexDirection: "column", flexShrink: 0 }}>
+          <div style={{ padding: "20px 16px", borderBottom: `1px solid ${C.gold}33` }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: C.gold }}>📋 雇用契約書管理</div>
+            <div style={{ fontSize: 11, color: "#ffffff80", marginTop: 4 }}>{user?.email}</div>
+          </div>
+          <div style={{ padding: "16px" }}>
+            <button onClick={handleLogout} style={{ width: "100%", padding: "8px", fontSize: 13, color: "#ffffff80", background: "transparent", border: "1px solid #ffffff33", borderRadius: 6, cursor: "pointer" }}>ログアウト</button>
+          </div>
+        </aside>
+        <main style={{ flex: 1, background: C.cream, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ textAlign: "center", maxWidth: 480 }}>
+            <div style={{ fontSize: 64, marginBottom: 16 }}>🏛</div>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: C.navy, marginBottom: 12 }}>会社情報を登録してください</h1>
+            <p style={{ fontSize: 14, color: C.gray, marginBottom: 24, lineHeight: 1.8 }}>
+              契約書の作成に会社情報が必要です。<br />まずは会社名・所在地・代表者などの基本情報と、<br />労働条件のデフォルト値を設定しましょう。
+            </p>
+            <button onClick={() => { setPage("company"); startEditCompany(); }} style={{ padding: "12px 32px", fontSize: 15, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 8, cursor: "pointer" }}>
+              会社情報を登録する
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
@@ -292,8 +338,8 @@ function DashboardContent() {
             {/* サマリーカード */}
             <div style={{ display: "flex", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
               {[
-                { label: "管理部署数", value: departments.length, color: C.navy },
                 { label: "在職中", value: activeEmployees.length, color: C.green },
+                { label: "部署数", value: departments.length, color: C.navy },
                 { label: "社保加入", value: socialInsCount, color: C.gold },
                 { label: "雇用保険", value: empInsCount, color: C.gold },
               ].map((card) => (
@@ -304,7 +350,7 @@ function DashboardContent() {
               ))}
             </div>
 
-            {/* 最近の従業員 */}
+            {/* 従業員テーブル */}
             <div style={{ background: C.white, borderRadius: 8, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: C.navy, marginBottom: 16 }}>従業員一覧</h2>
               {activeEmployees.length === 0 ? (
@@ -325,7 +371,7 @@ function DashboardContent() {
                         <tr key={e.id} style={{ borderBottom: `1px solid ${C.light}`, cursor: "pointer" }} onClick={() => { setPage("employees"); setSelectedEmployee(e); }}>
                           <td style={{ padding: "10px 12px", fontSize: 12, color: C.gray }}>{e.employeeNumber || "-"}</td>
                           <td style={{ padding: "10px 12px", fontSize: 14, fontWeight: 600 }}>{e.name}</td>
-                          <td style={{ padding: "10px 12px", fontSize: 13, color: C.gray }}>{getDeptName(e.companyId)}</td>
+                          <td style={{ padding: "10px 12px", fontSize: 13, color: C.gray }}>{getDeptName(e.departmentId)}</td>
                           <td style={{ padding: "10px 12px", fontSize: 13, color: C.gray }}>{lc?.employmentType || "-"}</td>
                           <td style={{ padding: "10px 12px", fontSize: 12 }}><span style={{ color: lc?.socialInsurance ? C.green : C.red }}>{lc?.socialInsurance ? "加入" : "-"}</span></td>
                           <td style={{ padding: "10px 12px", fontSize: 12 }}><span style={{ color: lc?.employmentInsurance ? C.green : C.red }}>{lc?.employmentInsurance ? "加入" : "-"}</span></td>
@@ -344,30 +390,50 @@ function DashboardContent() {
           <>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: C.navy, marginBottom: 20 }}>会社情報</h1>
 
-            {!company && !editingCompany ? (
-              <div style={{ background: C.white, borderRadius: 8, padding: 32, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", textAlign: "center" }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>🏛</div>
-                <p style={{ color: C.gray, fontSize: 14, marginBottom: 20 }}>会社情報が登録されていません。<br />契約書に使用する会社情報を登録してください。</p>
-                <button onClick={() => { setCompanyForm({ name: "", address: "", representative: "", phone: "" }); setEditingCompany(true); }} style={{ padding: "10px 24px", fontSize: 14, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 6, cursor: "pointer" }}>
-                  会社情報を登録
-                </button>
-              </div>
-            ) : editingCompany ? (
-              <div style={{ background: C.white, borderRadius: 8, padding: 32, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", maxWidth: 560 }}>
+            {editingCompany ? (
+              <div style={{ background: C.white, borderRadius: 8, padding: 32, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", maxWidth: 600 }}>
                 <h2 style={{ fontSize: 16, fontWeight: 700, color: C.navy, marginBottom: 20 }}>{company ? "会社情報を編集" : "会社情報を登録"}</h2>
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <FormField label="会社名（正式名称） *" value={companyForm.name} onChange={(v) => setCompanyForm({ ...companyForm, name: v })} placeholder="例: 株式会社○○" />
                   <FormField label="所在地" value={companyForm.address} onChange={(v) => setCompanyForm({ ...companyForm, address: v })} placeholder="例: 東京都千代田区..." />
-                  <FormField label="代表取締役名" value={companyForm.representative} onChange={(v) => setCompanyForm({ ...companyForm, representative: v })} placeholder="例: 山田 太郎" />
-                  <FormField label="電話番号" value={companyForm.phone} onChange={(v) => setCompanyForm({ ...companyForm, phone: v })} placeholder="例: 03-1234-5678" />
+                  <FormField label="代表取締役名" value={companyForm.representative} onChange={(v) => setCompanyForm({ ...companyForm, representative: v })} />
+                  <FormField label="電話番号" value={companyForm.phone} onChange={(v) => setCompanyForm({ ...companyForm, phone: v })} />
+
+                  <div style={{ borderTop: `1px solid ${C.light}`, paddingTop: 14, marginTop: 4 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.navy, marginBottom: 10 }}>労働時間デフォルト</div>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span style={{ fontSize: 13, color: C.gray }}>始業</span>
+                      <SmallInput value={companyForm.defaultStartHour} onChange={(v) => setCompanyForm({ ...companyForm, defaultStartHour: v })} width={50} />
+                      <span>:</span>
+                      <SmallInput value={companyForm.defaultStartMinute} onChange={(v) => setCompanyForm({ ...companyForm, defaultStartMinute: v })} width={50} />
+                      <span style={{ fontSize: 13, color: C.gray, marginLeft: 12 }}>終業</span>
+                      <SmallInput value={companyForm.defaultEndHour} onChange={(v) => setCompanyForm({ ...companyForm, defaultEndHour: v })} width={50} />
+                      <span>:</span>
+                      <SmallInput value={companyForm.defaultEndMinute} onChange={(v) => setCompanyForm({ ...companyForm, defaultEndMinute: v })} width={50} />
+                    </div>
+                  </div>
+                  <FormField label="週所定労働時間" value={String(companyForm.defaultWeeklyHours)} onChange={(v) => setCompanyForm({ ...companyForm, defaultWeeklyHours: Number(v) || 0 })} type="number" />
+                  <div style={{ display: "flex", gap: 16 }}>
+                    <FormField label="賃金締切日" value={companyForm.payClosingDay} onChange={(v) => setCompanyForm({ ...companyForm, payClosingDay: v })} />
+                    <FormField label="支払日" value={companyForm.paymentDay} onChange={(v) => setCompanyForm({ ...companyForm, paymentDay: v })} />
+                  </div>
+                  <div style={{ borderTop: `1px solid ${C.light}`, paddingTop: 14, marginTop: 4 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.navy, marginBottom: 10 }}>処遇デフォルト</div>
+                    <div style={{ display: "flex", gap: 20 }}>
+                      <CheckField label="昇給あり" checked={companyForm.incrementDefault} onChange={(v) => setCompanyForm({ ...companyForm, incrementDefault: v })} />
+                      <CheckField label="賞与あり" checked={companyForm.bonusDefault} onChange={(v) => setCompanyForm({ ...companyForm, bonusDefault: v })} />
+                      <CheckField label="退職金あり" checked={companyForm.retirementAllowanceDefault} onChange={(v) => setCompanyForm({ ...companyForm, retirementAllowanceDefault: v })} />
+                    </div>
+                  </div>
+                  <FormField label="就業規則確認場所" value={companyForm.workRulesLocation} onChange={(v) => setCompanyForm({ ...companyForm, workRulesLocation: v })} />
                 </div>
                 <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 24 }}>
-                  <button onClick={() => setEditingCompany(false)} style={{ padding: "8px 20px", fontSize: 13, color: C.gray, background: C.cream, border: "none", borderRadius: 6, cursor: "pointer" }}>キャンセル</button>
+                  {company && <button onClick={() => setEditingCompany(false)} style={{ padding: "8px 20px", fontSize: 13, color: C.gray, background: C.cream, border: "none", borderRadius: 6, cursor: "pointer" }}>キャンセル</button>}
                   <button onClick={saveCompany} style={{ padding: "8px 20px", fontSize: 13, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 6, cursor: "pointer" }}>保存</button>
                 </div>
               </div>
-            ) : (
-              <div style={{ background: C.white, borderRadius: 8, padding: 32, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", maxWidth: 560 }}>
+            ) : company ? (
+              <div style={{ background: C.white, borderRadius: 8, padding: 32, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", maxWidth: 600 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                   <h2 style={{ fontSize: 16, fontWeight: 700, color: C.navy }}>登録済み会社情報</h2>
                   <button onClick={startEditCompany} style={{ padding: "6px 16px", fontSize: 12, color: C.navy, background: C.pale, border: "none", borderRadius: 4, cursor: "pointer" }}>編集</button>
@@ -375,23 +441,28 @@ function DashboardContent() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <tbody>
                     {[
-                      { label: "会社名", value: company!.name },
-                      { label: "所在地", value: company!.address },
-                      { label: "代表取締役", value: company!.representative },
-                      { label: "電話番号", value: company!.phone },
+                      { label: "会社名", value: company.name },
+                      { label: "所在地", value: company.address },
+                      { label: "代表取締役", value: company.representative },
+                      { label: "電話番号", value: company.phone },
+                      { label: "勤務時間", value: `${company.defaultStartHour || "9"}:${company.defaultStartMinute || "00"} 〜 ${company.defaultEndHour || "18"}:${company.defaultEndMinute || "00"}` },
+                      { label: "週所定労働時間", value: `${company.defaultWeeklyHours || 40}時間` },
+                      { label: "賃金締切日", value: company.payClosingDay },
+                      { label: "支払日", value: company.paymentDay },
+                      { label: "昇給", value: company.incrementDefault ? "あり" : "なし" },
+                      { label: "賞与", value: company.bonusDefault ? "あり" : "なし" },
+                      { label: "退職金", value: company.retirementAllowanceDefault ? "あり" : "なし" },
+                      { label: "就業規則確認場所", value: company.workRulesLocation },
                     ].map((row) => (
                       <tr key={row.label} style={{ borderBottom: `1px solid ${C.light}` }}>
-                        <td style={{ padding: "12px 16px", fontSize: 12, fontWeight: 600, color: C.gray, width: 120 }}>{row.label}</td>
-                        <td style={{ padding: "12px 16px", fontSize: 14, color: C.navy }}>{row.value || "-"}</td>
+                        <td style={{ padding: "10px 16px", fontSize: 12, fontWeight: 600, color: C.gray, width: 140 }}>{row.label}</td>
+                        <td style={{ padding: "10px 16px", fontSize: 14, color: C.navy }}>{row.value || "-"}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                <div style={{ marginTop: 16, padding: "10px 16px", background: C.cream, borderRadius: 6, fontSize: 12, color: C.gray }}>
-                  この情報は契約書の「甲（使用者）」欄に使用されます。
-                </div>
               </div>
-            )}
+            ) : null}
           </>
         )}
 
@@ -399,9 +470,10 @@ function DashboardContent() {
         {page === "departments" && (
           <>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: C.navy, marginBottom: 20 }}>部署管理</h1>
+            <p style={{ fontSize: 13, color: C.gray, marginBottom: 16 }}>部署ごとに就業場所や勤務時間が異なる場合に登録します。部署なしでも従業員を登録できます。</p>
             <div style={{ background: C.white, borderRadius: 8, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <h2 style={{ fontSize: 16, fontWeight: 700, color: C.navy }}>管理部署一覧</h2>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: C.navy }}>部署一覧</h2>
                 <button onClick={() => { resetDeptForm(); setShowDeptForm(true); }} style={{ padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 6, cursor: "pointer" }}>+ 部署を追加</button>
               </div>
               {departments.length === 0 ? (
@@ -410,7 +482,7 @@ function DashboardContent() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ borderBottom: `2px solid ${C.navy}` }}>
-                      {["部署名", "所在地", "代表者", "従業員数", "操作"].map((h) => (
+                      {["部署名", "就業場所", "勤務時間", "人数", "操作"].map((h) => (
                         <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontSize: 12, fontWeight: 600, color: C.navy }}>{h}</th>
                       ))}
                     </tr>
@@ -420,9 +492,11 @@ function DashboardContent() {
                       <tr key={dept.id} style={{ borderBottom: `1px solid ${C.light}` }}>
                         <td style={{ padding: "10px 12px", fontSize: 14, fontWeight: 600 }}>{dept.name}</td>
                         <td style={{ padding: "10px 12px", fontSize: 13, color: C.gray }}>{dept.address || "-"}</td>
-                        <td style={{ padding: "10px 12px", fontSize: 13, color: C.gray }}>{dept.representative || "-"}</td>
+                        <td style={{ padding: "10px 12px", fontSize: 13, color: C.gray }}>
+                          {dept.startHour && dept.endHour ? `${dept.startHour}:${dept.startMinute || "00"} 〜 ${dept.endHour}:${dept.endMinute || "00"}` : "会社デフォルト"}
+                        </td>
                         <td style={{ padding: "10px 12px", fontSize: 13 }}>
-                          <span style={{ background: C.pale, padding: "2px 10px", borderRadius: 12, fontSize: 12, fontWeight: 600, color: C.navy }}>{getEmpContractCount(dept.id)}人</span>
+                          <span style={{ background: C.pale, padding: "2px 10px", borderRadius: 12, fontSize: 12, fontWeight: 600, color: C.navy }}>{getEmpCount(dept.id)}人</span>
                         </td>
                         <td style={{ padding: "10px 12px" }}>
                           <button onClick={() => startEditDept(dept)} style={{ padding: "4px 12px", fontSize: 12, color: C.navy, background: C.pale, border: "none", borderRadius: 4, cursor: "pointer", marginRight: 6 }}>編集</button>
@@ -446,13 +520,15 @@ function DashboardContent() {
                 <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: C.gray, marginBottom: 4 }}>検索</label>
                 <input value={searchText} onChange={(e) => setSearchText(e.target.value)} placeholder="氏名・番号で検索" style={{ padding: "7px 12px", border: `1px solid ${C.light}`, borderRadius: 6, fontSize: 13, width: 180 }} />
               </div>
-              <div>
-                <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: C.gray, marginBottom: 4 }}>部署</label>
-                <select value={filterDept} onChange={(e) => setFilterDept(e.target.value)} style={{ padding: "7px 12px", border: `1px solid ${C.light}`, borderRadius: 6, fontSize: 13, background: "#fff" }}>
-                  <option value="">すべて</option>
-                  {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-              </div>
+              {departments.length > 0 && (
+                <div>
+                  <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: C.gray, marginBottom: 4 }}>部署</label>
+                  <select value={filterDept} onChange={(e) => setFilterDept(e.target.value)} style={{ padding: "7px 12px", border: `1px solid ${C.light}`, borderRadius: 6, fontSize: 13, background: "#fff" }}>
+                    <option value="">すべて</option>
+                    {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  </select>
+                </div>
+              )}
               <div>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: C.gray, marginBottom: 4 }}>ステータス</label>
                 <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ padding: "7px 12px", border: `1px solid ${C.light}`, borderRadius: 6, fontSize: 13, background: "#fff" }}>
@@ -462,7 +538,7 @@ function DashboardContent() {
                   <option value="retired">退職</option>
                 </select>
               </div>
-              <button onClick={() => { setEmpForm({ name: "", employeeNumber: "", email: "", companyId: departments[0]?.id || "" }); setShowEmpForm(true); }} style={{ padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 6, cursor: "pointer" }}>
+              <button onClick={() => { setEmpForm({ name: "", employeeNumber: "", email: "", departmentId: "" }); setShowEmpForm(true); }} style={{ padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 6, cursor: "pointer" }}>
                 + 従業員追加
               </button>
             </div>
@@ -474,8 +550,8 @@ function DashboardContent() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ borderBottom: `2px solid ${C.navy}` }}>
-                      {["番号", "氏名", "メール", "部署", "雇用形態", "ステータス"].map((h) => (
-                        <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontSize: 12, fontWeight: 600, color: C.navy }}>{h}</th>
+                      {["番号", "氏名", "メール", departments.length > 0 ? "部署" : null, "雇用形態", "ステータス"].filter(Boolean).map((h) => (
+                        <th key={h!} style={{ textAlign: "left", padding: "8px 12px", fontSize: 12, fontWeight: 600, color: C.navy }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -491,7 +567,7 @@ function DashboardContent() {
                             {empAlerts.length > 0 && <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: empAlerts[0].type === "danger" ? C.red : "#e6a700", marginLeft: 6, verticalAlign: "middle" }} />}
                           </td>
                           <td style={{ padding: "10px 12px", fontSize: 12, color: C.gray }}>{e.email || "-"}</td>
-                          <td style={{ padding: "10px 12px", fontSize: 13, color: C.gray }}>{getDeptName(e.companyId)}</td>
+                          {departments.length > 0 && <td style={{ padding: "10px 12px", fontSize: 13, color: C.gray }}>{getDeptName(e.departmentId)}</td>}
                           <td style={{ padding: "10px 12px", fontSize: 13, color: C.gray }}>{lc?.employmentType || "-"}</td>
                           <td style={{ padding: "10px 12px" }}>{statusBadge(e.status)}</td>
                         </tr>
@@ -518,7 +594,7 @@ function DashboardContent() {
               <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
                 <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>従業員番号</span><div style={{ fontSize: 14 }}>{selectedEmployee.employeeNumber || "未設定"}</div></div>
                 <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>メール</span><div style={{ fontSize: 14 }}>{selectedEmployee.email || "未設定"}</div></div>
-                <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>部署</span><div style={{ fontSize: 14 }}>{getDeptName(selectedEmployee.companyId)}</div></div>
+                {departments.length > 0 && <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>部署</span><div style={{ fontSize: 14 }}>{getDeptName(selectedEmployee.departmentId)}</div></div>}
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
                 {selectedEmployee.status === "active" && (
@@ -586,42 +662,26 @@ function DashboardContent() {
 
       {/* ===== モーダル群 ===== */}
 
-      {/* 部署モーダル */}
+      {/* 部署モーダル（シンプル） */}
       {showDeptForm && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }} onClick={(e) => { if (e.target === e.currentTarget) resetDeptForm(); }}>
-          <div style={{ background: C.white, borderRadius: 12, padding: 32, width: 520, maxHeight: "80vh", overflow: "auto" }}>
+          <div style={{ background: C.white, borderRadius: 12, padding: 32, width: 480 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: C.navy, marginBottom: 20 }}>{editDept ? "部署を編集" : "部署を追加"}</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <FormField label="部署名 *" value={deptForm.name} onChange={(v) => setDeptForm({ ...deptForm, name: v })} />
-              <FormField label="所在地" value={deptForm.address} onChange={(v) => setDeptForm({ ...deptForm, address: v })} />
-              <FormField label="代表取締役名" value={deptForm.representative} onChange={(v) => setDeptForm({ ...deptForm, representative: v })} />
-              <div style={{ borderTop: `1px solid ${C.light}`, paddingTop: 14, marginTop: 4 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.navy, marginBottom: 10 }}>労働時間デフォルト</div>
+              <FormField label="就業場所" value={deptForm.address} onChange={(v) => setDeptForm({ ...deptForm, address: v })} placeholder="会社所在地と異なる場合" />
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 6 }}>勤務時間（空欄なら会社デフォルト）</div>
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <span style={{ fontSize: 13, color: C.gray }}>始業</span>
-                  <SmallInput value={deptForm.defaultStartHour} onChange={(v) => setDeptForm({ ...deptForm, defaultStartHour: v })} width={50} />
+                  <SmallInput value={deptForm.startHour} onChange={(v) => setDeptForm({ ...deptForm, startHour: v })} width={50} />
                   <span>:</span>
-                  <SmallInput value={deptForm.defaultStartMinute} onChange={(v) => setDeptForm({ ...deptForm, defaultStartMinute: v })} width={50} />
-                  <span style={{ fontSize: 13, color: C.gray, marginLeft: 12 }}>終業</span>
-                  <SmallInput value={deptForm.defaultEndHour} onChange={(v) => setDeptForm({ ...deptForm, defaultEndHour: v })} width={50} />
+                  <SmallInput value={deptForm.startMinute} onChange={(v) => setDeptForm({ ...deptForm, startMinute: v })} width={50} />
+                  <span style={{ fontSize: 13, margin: "0 8px" }}>〜</span>
+                  <SmallInput value={deptForm.endHour} onChange={(v) => setDeptForm({ ...deptForm, endHour: v })} width={50} />
                   <span>:</span>
-                  <SmallInput value={deptForm.defaultEndMinute} onChange={(v) => setDeptForm({ ...deptForm, defaultEndMinute: v })} width={50} />
+                  <SmallInput value={deptForm.endMinute} onChange={(v) => setDeptForm({ ...deptForm, endMinute: v })} width={50} />
                 </div>
               </div>
-              <FormField label="週所定労働時間" value={String(deptForm.defaultWeeklyHours)} onChange={(v) => setDeptForm({ ...deptForm, defaultWeeklyHours: Number(v) || 0 })} type="number" />
-              <div style={{ display: "flex", gap: 16 }}>
-                <FormField label="賃金締切日" value={deptForm.payClosingDay} onChange={(v) => setDeptForm({ ...deptForm, payClosingDay: v })} />
-                <FormField label="支払日" value={deptForm.paymentDay} onChange={(v) => setDeptForm({ ...deptForm, paymentDay: v })} />
-              </div>
-              <div style={{ borderTop: `1px solid ${C.light}`, paddingTop: 14, marginTop: 4 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.navy, marginBottom: 10 }}>処遇デフォルト</div>
-                <div style={{ display: "flex", gap: 20 }}>
-                  <CheckField label="昇給あり" checked={deptForm.incrementDefault} onChange={(v) => setDeptForm({ ...deptForm, incrementDefault: v })} />
-                  <CheckField label="賞与あり" checked={deptForm.bonusDefault} onChange={(v) => setDeptForm({ ...deptForm, bonusDefault: v })} />
-                  <CheckField label="退職金あり" checked={deptForm.retirementAllowanceDefault} onChange={(v) => setDeptForm({ ...deptForm, retirementAllowanceDefault: v })} />
-                </div>
-              </div>
-              <FormField label="就業規則確認場所" value={deptForm.workRulesLocation} onChange={(v) => setDeptForm({ ...deptForm, workRulesLocation: v })} />
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 24 }}>
               <button onClick={resetDeptForm} style={{ padding: "8px 20px", fontSize: 13, color: C.gray, background: C.cream, border: "none", borderRadius: 6, cursor: "pointer" }}>キャンセル</button>
@@ -640,12 +700,15 @@ function DashboardContent() {
               <FormField label="氏名 *" value={empForm.name} onChange={(v) => setEmpForm({ ...empForm, name: v })} />
               <FormField label="従業員番号" value={empForm.employeeNumber} onChange={(v) => setEmpForm({ ...empForm, employeeNumber: v })} placeholder="任意" />
               <FormField label="メールアドレス" value={empForm.email} onChange={(v) => setEmpForm({ ...empForm, email: v })} placeholder="契約書送信用" />
-              <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 4 }}>部署 *</label>
-                <select value={empForm.companyId} onChange={(e) => setEmpForm({ ...empForm, companyId: e.target.value })} style={{ width: "100%", padding: "8px 12px", border: "1px solid #e8e2da", borderRadius: 6, fontSize: 14, background: "#fff" }}>
-                  {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-              </div>
+              {departments.length > 0 && (
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 4 }}>部署</label>
+                  <select value={empForm.departmentId} onChange={(e) => setEmpForm({ ...empForm, departmentId: e.target.value })} style={{ width: "100%", padding: "8px 12px", border: "1px solid #e8e2da", borderRadius: 6, fontSize: 14, background: "#fff" }}>
+                    <option value="">なし</option>
+                    {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  </select>
+                </div>
+              )}
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 24 }}>
               <button onClick={() => setShowEmpForm(false)} style={{ padding: "8px 20px", fontSize: 13, color: C.gray, background: C.cream, border: "none", borderRadius: 6, cursor: "pointer" }}>キャンセル</button>
@@ -661,7 +724,7 @@ function DashboardContent() {
           user={user}
           employee={selectedEmployee}
           company={company}
-          department={departments.find((d) => d.id === selectedEmployee.companyId)}
+          department={departments.find((d) => d.id === selectedEmployee.departmentId)}
           allEmployees={employees}
           allContracts={contracts}
           previousContract={selectedContracts[0]}
@@ -676,7 +739,6 @@ function DashboardContent() {
           contract={previewContract}
           employee={selectedEmployee}
           company={company}
-          department={departments.find((d) => d.id === selectedEmployee.companyId)}
           onClose={() => setPreviewContract(null)}
         />
       )}
