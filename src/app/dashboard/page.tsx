@@ -9,7 +9,7 @@ import {
   addDoc, updateDoc, deleteDoc, doc, serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { C, Department, Employee, Contract } from "@/lib/types";
+import { C, Company, Department, Employee, Contract } from "@/lib/types";
 import { documentTypeLabel } from "@/lib/insurance";
 import { FormField, SmallInput, CheckField } from "@/components/FormParts";
 import ContractForm from "@/components/ContractForm";
@@ -28,6 +28,8 @@ function DashboardContent() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [page, setPage] = useState("dashboard");
+  const [company, setCompany] = useState<Company | null>(null);
+  const [companyDocId, setCompanyDocId] = useState<string | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
@@ -50,6 +52,10 @@ function DashboardContent() {
   // 新規従業員フォーム
   const [empForm, setEmpForm] = useState({ name: "", employeeNumber: "", email: "", companyId: "" });
 
+  // 会社情報フォーム
+  const [companyForm, setCompanyForm] = useState({ name: "", address: "", representative: "", phone: "" });
+  const [editingCompany, setEditingCompany] = useState(false);
+
   // 部署フォーム
   const [deptForm, setDeptForm] = useState({
     name: "", address: "", representative: "",
@@ -63,6 +69,16 @@ function DashboardContent() {
   useEffect(() => {
     if (!user) return;
     const unsubs: (() => void)[] = [];
+    unsubs.push(onSnapshot(query(collection(db, "companyInfo"), where("userId", "==", user.uid)), (snap) => {
+      if (snap.docs.length > 0) {
+        const d = snap.docs[0];
+        setCompany({ id: d.id, ...d.data() } as Company);
+        setCompanyDocId(d.id);
+      } else {
+        setCompany(null);
+        setCompanyDocId(null);
+      }
+    }));
     unsubs.push(onSnapshot(query(collection(db, "companies"), where("userId", "==", user.uid)), (snap) =>
       setDepartments(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Department)))
     ));
@@ -115,6 +131,25 @@ function DashboardContent() {
         return bt - at;
       })
     : [];
+
+  // 会社情報保存
+  const saveCompany = async () => {
+    if (!user || !companyForm.name) { alert("会社名は必須です"); return; }
+    const data = { ...companyForm, userId: user.uid, updatedAt: serverTimestamp() };
+    if (companyDocId) {
+      await updateDoc(doc(db, "companyInfo", companyDocId), data);
+    } else {
+      await addDoc(collection(db, "companyInfo"), { ...data, createdAt: serverTimestamp() });
+    }
+    setEditingCompany(false);
+  };
+  const startEditCompany = () => {
+    setCompanyForm({
+      name: company?.name || "", address: company?.address || "",
+      representative: company?.representative || "", phone: company?.phone || "",
+    });
+    setEditingCompany(true);
+  };
 
   // 部署CRUD
   const resetDeptForm = () => {
@@ -179,6 +214,7 @@ function DashboardContent() {
 
   const navItems = [
     { key: "dashboard", label: "ダッシュボード", icon: "📊" },
+    { key: "company", label: "会社情報", icon: "🏛" },
     { key: "departments", label: "部署管理", icon: "🏢" },
     { key: "employees", label: "従業員一覧", icon: "👥" },
   ];
@@ -300,6 +336,62 @@ function DashboardContent() {
                 </table>
               )}
             </div>
+          </>
+        )}
+
+        {/* ===== 会社情報 ===== */}
+        {page === "company" && (
+          <>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: C.navy, marginBottom: 20 }}>会社情報</h1>
+
+            {!company && !editingCompany ? (
+              <div style={{ background: C.white, borderRadius: 8, padding: 32, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", textAlign: "center" }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>🏛</div>
+                <p style={{ color: C.gray, fontSize: 14, marginBottom: 20 }}>会社情報が登録されていません。<br />契約書に使用する会社情報を登録してください。</p>
+                <button onClick={() => { setCompanyForm({ name: "", address: "", representative: "", phone: "" }); setEditingCompany(true); }} style={{ padding: "10px 24px", fontSize: 14, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 6, cursor: "pointer" }}>
+                  会社情報を登録
+                </button>
+              </div>
+            ) : editingCompany ? (
+              <div style={{ background: C.white, borderRadius: 8, padding: 32, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", maxWidth: 560 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: C.navy, marginBottom: 20 }}>{company ? "会社情報を編集" : "会社情報を登録"}</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <FormField label="会社名（正式名称） *" value={companyForm.name} onChange={(v) => setCompanyForm({ ...companyForm, name: v })} placeholder="例: 株式会社○○" />
+                  <FormField label="所在地" value={companyForm.address} onChange={(v) => setCompanyForm({ ...companyForm, address: v })} placeholder="例: 東京都千代田区..." />
+                  <FormField label="代表取締役名" value={companyForm.representative} onChange={(v) => setCompanyForm({ ...companyForm, representative: v })} placeholder="例: 山田 太郎" />
+                  <FormField label="電話番号" value={companyForm.phone} onChange={(v) => setCompanyForm({ ...companyForm, phone: v })} placeholder="例: 03-1234-5678" />
+                </div>
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 24 }}>
+                  <button onClick={() => setEditingCompany(false)} style={{ padding: "8px 20px", fontSize: 13, color: C.gray, background: C.cream, border: "none", borderRadius: 6, cursor: "pointer" }}>キャンセル</button>
+                  <button onClick={saveCompany} style={{ padding: "8px 20px", fontSize: 13, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 6, cursor: "pointer" }}>保存</button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ background: C.white, borderRadius: 8, padding: 32, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", maxWidth: 560 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: C.navy }}>登録済み会社情報</h2>
+                  <button onClick={startEditCompany} style={{ padding: "6px 16px", fontSize: 12, color: C.navy, background: C.pale, border: "none", borderRadius: 4, cursor: "pointer" }}>編集</button>
+                </div>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <tbody>
+                    {[
+                      { label: "会社名", value: company!.name },
+                      { label: "所在地", value: company!.address },
+                      { label: "代表取締役", value: company!.representative },
+                      { label: "電話番号", value: company!.phone },
+                    ].map((row) => (
+                      <tr key={row.label} style={{ borderBottom: `1px solid ${C.light}` }}>
+                        <td style={{ padding: "12px 16px", fontSize: 12, fontWeight: 600, color: C.gray, width: 120 }}>{row.label}</td>
+                        <td style={{ padding: "12px 16px", fontSize: 14, color: C.navy }}>{row.value || "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div style={{ marginTop: 16, padding: "10px 16px", background: C.cream, borderRadius: 6, fontSize: 12, color: C.gray }}>
+                  この情報は契約書の「甲（使用者）」欄に使用されます。
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -568,6 +660,7 @@ function DashboardContent() {
         <ContractForm
           user={user}
           employee={selectedEmployee}
+          company={company}
           department={departments.find((d) => d.id === selectedEmployee.companyId)}
           allEmployees={employees}
           allContracts={contracts}
@@ -582,6 +675,7 @@ function DashboardContent() {
         <ContractPreview
           contract={previewContract}
           employee={selectedEmployee}
+          company={company}
           department={departments.find((d) => d.id === selectedEmployee.companyId)}
           onClose={() => setPreviewContract(null)}
         />

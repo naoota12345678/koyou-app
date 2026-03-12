@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { C, Department, Contract, Employee } from "@/lib/types";
+import { C, Company, Department, Contract, Employee } from "@/lib/types";
 import { calcInsurance, calcIsTokutei, calcDocumentType, documentTypeLabel } from "@/lib/insurance";
 import { FormField, SmallInput, CheckField, SelectField, RadioGroup } from "./FormParts";
 import ContractPreview from "./ContractPreview";
@@ -61,6 +61,7 @@ type ContractFormData = {
 type Props = {
   user: User;
   employee: Employee;
+  company: Company | null;
   department: Department | undefined;
   allEmployees: Employee[];
   allContracts: Contract[];
@@ -74,7 +75,7 @@ const reiwaYear = String(now.getFullYear() - 2018);
 const thisMonth = String(now.getMonth() + 1);
 const thisDay = String(now.getDate());
 
-export default function ContractForm({ user, employee, department, allEmployees, allContracts, previousContract, onClose, onSaved }: Props) {
+export default function ContractForm({ user, employee, company, department, allEmployees, allContracts, previousContract, onClose, onSaved }: Props) {
   const [step, setStep] = useState(1);
   const [savedContract, setSavedContract] = useState<Contract | null>(null);
 
@@ -224,6 +225,7 @@ export default function ContractForm({ user, employee, department, allEmployees,
       <ContractPreview
         contract={savedContract}
         employee={employee}
+        company={company}
         department={department}
         onClose={() => onSaved(savedContract.id)}
       />

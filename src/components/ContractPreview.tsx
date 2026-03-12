@@ -1,11 +1,12 @@
 "use client";
 
-import { C, Contract, Employee, Department } from "@/lib/types";
+import { C, Company, Contract, Employee, Department } from "@/lib/types";
 import { documentTypeLabel } from "@/lib/insurance";
 
 type Props = {
   contract: Contract;
   employee: Employee;
+  company: Company | null;
   department: Department | undefined;
   onClose: () => void;
 };
@@ -24,7 +25,10 @@ function salaryLabel(contract: Contract): string {
 
 const isKoyouType = (type: string) => type === "koyou_muki" || type === "koyou_yuki";
 
-export default function ContractPreview({ contract, employee, department, onClose }: Props) {
+export default function ContractPreview({ contract, employee, company, department, onClose }: Props) {
+  const companyName = company?.name || department?.name || "（事業所名）";
+  const companyAddress = company?.address || department?.address || "";
+  const companyRep = company?.representative || department?.representative || "";
   const isKoyou = isKoyouType(contract.documentType);
   const isYuki = contract.isYuki;
   const title = isKoyou ? "雇用契約書" : "労働条件通知書";
@@ -98,8 +102,8 @@ export default function ContractPreview({ contract, employee, department, onClos
             <div style={{ marginBottom: 28 }}>
               <div style={{ marginBottom: 6, fontSize: 14 }}>
                 <span style={{ fontWeight: 600 }}>甲（使用者）：</span>
-                {department?.name || "（事業所名）"}
-                {department?.representative && ` 代表取締役 ${department.representative}`}
+                {companyName}
+                {companyRep && ` 代表取締役 ${companyRep}`}
               </div>
               <div style={{ fontSize: 14 }}>
                 <span style={{ fontWeight: 600 }}>乙（労働者）：</span>
@@ -115,8 +119,8 @@ export default function ContractPreview({ contract, employee, department, onClos
                 <span style={{ fontWeight: 600 }}>{employee.name}</span> 殿
               </div>
               <div style={{ textAlign: "right", fontSize: 14, marginBottom: 8 }}>
-                {department?.name || "（事業所名）"}
-                {department?.representative && <><br />代表取締役 {department.representative}</>}
+                {companyName}
+                {companyRep && <><br />代表取締役 {companyRep}</>}
               </div>
               <div style={{ marginTop: 12, fontSize: 13, color: "#444", lineHeight: 1.9 }}>
                 以下の労働条件により通知いたします。
@@ -283,13 +287,13 @@ export default function ContractPreview({ contract, employee, department, onClos
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>甲（使用者）</div>
                   <div style={{ borderBottom: "1px solid #333", paddingBottom: 4, marginBottom: 12, fontSize: 13 }}>
-                    所在地: {department?.address || ""}
+                    所在地: {companyAddress}
                   </div>
                   <div style={{ borderBottom: "1px solid #333", paddingBottom: 4, marginBottom: 12, fontSize: 13 }}>
-                    名称: {department?.name || ""}
+                    名称: {companyName}
                   </div>
                   <div style={{ borderBottom: "1px solid #333", paddingBottom: 4, marginBottom: 12, fontSize: 13 }}>
-                    代表者: {department?.representative || ""}
+                    代表者: {companyRep}
                   </div>
                   <div style={{ display: "flex", alignItems: "flex-end", gap: 8, marginTop: 20 }}>
                     <span style={{ fontSize: 12, color: "#777" }}>印</span>

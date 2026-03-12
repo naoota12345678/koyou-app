@@ -1,3 +1,14 @@
+export type Company = {
+  id: string;
+  userId: string;
+  name: string;
+  address: string;
+  representative: string;
+  phone: string;
+  createdAt: unknown;
+  updatedAt: unknown;
+};
+
 export type Department = {
   id: string;
   userId: string;
