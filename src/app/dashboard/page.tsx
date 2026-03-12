@@ -42,7 +42,7 @@ function DashboardContent() {
         {/* 在籍サマリー */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white p-4 rounded-lg shadow">
-            <p className="text-sm text-gray-500">管理会社数</p>
+            <p className="text-sm text-gray-500">管理部署数</p>
             <p className="text-2xl font-bold">-</p>
           </div>
           <div className="bg-white p-4 rounded-lg shadow">
@@ -62,12 +62,12 @@ function DashboardContent() {
         {/* 会社一覧（後で実装） */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold">管理会社一覧</h2>
+            <h2 className="text-lg font-bold">管理部署一覧</h2>
             <button className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">
-              + 会社を追加
+              + 部署を追加
             </button>
           </div>
-          <p className="text-gray-500 text-sm">会社が登録されていません</p>
+          <p className="text-gray-500 text-sm">部署が登録されていません</p>
         </div>
       </main>
     </div>
