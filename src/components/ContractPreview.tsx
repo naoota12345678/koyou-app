@@ -214,7 +214,7 @@ export default function ContractPreview({ contract, employee, company, onClose }
                     イ　固定残業手当({contract.fixedOvertimeAmount ? <span style={markStyle}>{contract.fixedOvertimeAmount.toLocaleString()}</span> : "　　　　"}円／月：みなし残業代として月{contract.fixedOvertimeHours || "　"}時間分を固定支給する。)
                   </div>
                   <div>
-                    ロ　通勤手当（{contract.commuteAllowance ? <span style={markStyle}>{contract.commuteAllowance.toLocaleString()}</span> : "　　　　　"}円／月　上限　　円／月　）
+                    ロ　通勤手当（{contract.commuteAllowance ? <span style={markStyle}>{contract.commuteAllowance.toLocaleString()}</span> : "　　　　　"}円／{contract.commuteAllowanceType === "daily" ? "日" : "月"}　{contract.commuteAllowanceMax ? <>上限<span style={markStyle}>{contract.commuteAllowanceMax.toLocaleString()}</span>円／月</> : "上限　　円／月"}　）
                   </div>
                   <div style={{ marginTop: 4 }}>
                     総支給額　<span style={markStyle}>{contract.totalSalary?.toLocaleString() || 0}</span>円
@@ -245,7 +245,12 @@ export default function ContractPreview({ contract, employee, company, onClose }
               <tr>
                 <td style={thStyle}>社会保険等<br />の加入</td>
                 <td style={tdStyle}>
-                  <div>・社会保険の加入：　{contract.socialInsurance ? <span style={markStyle}>イ　厚生年金、　ロ　健康保険、　ハ　厚生年金基金</span> : "非加入"}</div>
+                  <div>・社会保険の加入：　{contract.socialInsurance ? (
+                    <>
+                      <span style={markStyle}>イ　厚生年金</span>、　<span style={markStyle}>ロ　健康保険</span>
+                      {contract.pensionFund && <span>、　<span style={markStyle}>ハ　厚生年金基金</span></span>}
+                    </>
+                  ) : "非加入"}</div>
                   <div>・雇用保険の適用：　{yesNo(contract.employmentInsurance)}</div>
                 </td>
               </tr>

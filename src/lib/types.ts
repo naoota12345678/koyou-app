@@ -94,6 +94,7 @@ export type Contract = {
   fixedOvertimeAmount: number;
   fixedOvertimeHours: number;
   commuteAllowance: number;
+  commuteAllowanceType: string; // "monthly" | "daily"
   commuteAllowanceMax: number;
   totalSalary: number;
   payClosingDay: string;
@@ -105,6 +106,7 @@ export type Contract = {
   // 社保・雇用保険
   socialInsurance: boolean;
   employmentInsurance: boolean;
+  pensionFund: boolean; // 厚生年金基金
   socialInsuranceOverride: boolean;
   employmentInsuranceOverride: boolean;
   // 管理情報

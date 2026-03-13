@@ -42,6 +42,8 @@ type ContractFormData = {
   fixedOvertimeAmount: number;
   fixedOvertimeHours: number;
   commuteAllowance: number;
+  commuteAllowanceType: string; // "monthly" | "daily"
+  commuteAllowanceMax: number;
   totalSalary: number;
   payClosingDay: string;
   paymentDay: string;
@@ -49,6 +51,7 @@ type ContractFormData = {
   bonus: boolean;
   retirementAllowance: boolean;
   retirementAllowanceDetail: string;
+  pensionFund: boolean;
   studentType: string;
   recruitmentSource: string;
   remarks: string;
@@ -115,6 +118,8 @@ export default function ContractForm({ user, employee, company, department, allE
       fixedOvertimeAmount: prev?.fixedOvertimeAmount || 0,
       fixedOvertimeHours: prev?.fixedOvertimeHours || 0,
       commuteAllowance: prev?.commuteAllowance || 0,
+      commuteAllowanceType: prev?.commuteAllowanceType || "monthly",
+      commuteAllowanceMax: prev?.commuteAllowanceMax || 0,
       totalSalary: 0,
       payClosingDay: prev?.payClosingDay || company?.payClosingDay || "末日",
       paymentDay: prev?.paymentDay || company?.paymentDay || "翌月25日",
@@ -122,6 +127,7 @@ export default function ContractForm({ user, employee, company, department, allE
       bonus: prev?.bonus ?? company?.bonusDefault ?? true,
       retirementAllowance: prev?.retirementAllowance ?? company?.retirementAllowanceDefault ?? false,
       retirementAllowanceDetail: prev?.retirementAllowanceDetail || "",
+      pensionFund: prev?.pensionFund ?? false,
       studentType: prev?.studentType || "学生でない",
       recruitmentSource: prev?.recruitmentSource || "直接",
       remarks: "",
@@ -195,6 +201,8 @@ export default function ContractForm({ user, employee, company, department, allE
       fixedOvertimeAmount: form.fixedOvertimeAmount,
       fixedOvertimeHours: form.fixedOvertimeHours,
       commuteAllowance: form.commuteAllowance,
+      commuteAllowanceType: form.commuteAllowanceType,
+      commuteAllowanceMax: form.commuteAllowanceMax,
       totalSalary: form.totalSalary,
       payClosingDay: form.payClosingDay,
       paymentDay: form.paymentDay,
@@ -204,6 +212,7 @@ export default function ContractForm({ user, employee, company, department, allE
       retirementAllowanceDetail: form.retirementAllowanceDetail,
       socialInsurance: finalSocial,
       employmentInsurance: finalEmployment,
+      pensionFund: form.pensionFund,
       socialInsuranceOverride: form.socialInsuranceOverride,
       employmentInsuranceOverride: form.employmentInsuranceOverride,
       studentType: form.studentType,
@@ -404,7 +413,15 @@ export default function ContractForm({ user, employee, company, department, allE
               <FormField label="固定残業手当（円/月）" value={String(form.fixedOvertimeAmount || "")} onChange={(v) => f("fixedOvertimeAmount", Number(v) || 0)} type="number" />
               <FormField label="固定残業（時間/月）" value={String(form.fixedOvertimeHours || "")} onChange={(v) => f("fixedOvertimeHours", Number(v) || 0)} type="number" />
             </div>
-            <FormField label="通勤手当（円/月）" value={String(form.commuteAllowance || "")} onChange={(v) => f("commuteAllowance", Number(v) || 0)} type="number" />
+            <div>
+              <RadioGroup label="通勤手当" value={form.commuteAllowanceType} onChange={(v) => f("commuteAllowanceType", v)} options={[
+                { value: "monthly", label: "月額" }, { value: "daily", label: "日額" },
+              ]} />
+              <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
+                <FormField label={form.commuteAllowanceType === "daily" ? "通勤手当（円/日）" : "通勤手当（円/月）"} value={String(form.commuteAllowance || "")} onChange={(v) => f("commuteAllowance", Number(v) || 0)} type="number" />
+                <FormField label="上限（円/月）" value={String(form.commuteAllowanceMax || "")} onChange={(v) => f("commuteAllowanceMax", Number(v) || 0)} type="number" placeholder="0 = 上限なし" />
+              </div>
+            </div>
             <div style={{ padding: "8px 12px", background: C.pale, borderRadius: 6, fontSize: 14, color: C.navy }}>
               総支給額: <strong>{form.totalSalary.toLocaleString()}円</strong>
             </div>
@@ -424,6 +441,7 @@ export default function ContractForm({ user, employee, company, department, allE
                 <div style={{ fontSize: 13 }}>雇用保険: <strong style={{ color: finalEmployment ? C.green : C.red }}>{finalEmployment ? "加入" : "非加入"}</strong></div>
                 <div style={{ fontSize: 12, color: C.gray }}>特定適用: {isTokutei ? "該当" : "非該当"}</div>
               </div>
+              <CheckField label="厚生年金基金に加入" checked={form.pensionFund} onChange={(v) => f("pensionFund", v)} />
               <CheckField label="判定結果を手動で変更する" checked={form.socialInsuranceOverride} onChange={(v) => { f("socialInsuranceOverride", v); f("employmentInsuranceOverride", v); }} />
               {form.socialInsuranceOverride && (
                 <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
