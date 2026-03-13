@@ -46,6 +46,10 @@ function DashboardContent() {
   const [filterDept, setFilterDept] = useState("");
   const [filterStatus, setFilterStatus] = useState("active");
 
+  // 従業員編集
+  const [editingEmployee, setEditingEmployee] = useState(false);
+  const [editEmpForm, setEditEmpForm] = useState({ name: "", employeeNumber: "", email: "", departmentId: "" });
+
   // 退職モーダル
   const [showRetireModal, setShowRetireModal] = useState<Employee | null>(null);
   const [retireForm, setRetireForm] = useState({ retirementReason: "自己都合", retirementRemarks: "" });
@@ -203,6 +207,28 @@ function DashboardContent() {
     setPage("employees");
     setEditContract(null);
     setShowContractForm(true);
+  };
+
+  // 従業員編集
+  const startEditEmployee = () => {
+    if (!selectedEmployee) return;
+    setEditEmpForm({
+      name: selectedEmployee.name || "",
+      employeeNumber: selectedEmployee.employeeNumber || "",
+      email: selectedEmployee.email || "",
+      departmentId: selectedEmployee.departmentId || "",
+    });
+    setEditingEmployee(true);
+  };
+  const saveEditEmployee = async () => {
+    if (!user || !selectedEmployee || !editEmpForm.name) { alert("氏名は必須です"); return; }
+    await updateDoc(doc(db, "employees", selectedEmployee.id), {
+      name: editEmpForm.name, employeeNumber: editEmpForm.employeeNumber,
+      email: editEmpForm.email, departmentId: editEmpForm.departmentId,
+      updatedAt: serverTimestamp(),
+    });
+    setSelectedEmployee({ ...selectedEmployee, ...editEmpForm });
+    setEditingEmployee(false);
   };
 
   // 退職処理
@@ -593,23 +619,51 @@ function DashboardContent() {
 
             {/* 従業員情報 */}
             <div style={{ background: C.white, borderRadius: 8, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.08)", marginBottom: 20 }}>
-              <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
-                <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>従業員番号</span><div style={{ fontSize: 14 }}>{selectedEmployee.employeeNumber || "未設定"}</div></div>
-                <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>メール</span><div style={{ fontSize: 14 }}>{selectedEmployee.email || "未設定"}</div></div>
-                {departments.length > 0 && <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>部署</span><div style={{ fontSize: 14 }}>{getDeptName(selectedEmployee.departmentId)}</div></div>}
-              </div>
-              <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                {selectedEmployee.status === "active" && (
-                  <>
-                    <button onClick={() => { setEditContract(null); setShowContractForm(true); }} style={{ padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 6, cursor: "pointer" }}>
-                      + 新しい契約書
-                    </button>
-                    <button onClick={() => { setShowRetireModal(selectedEmployee); setRetireForm({ retirementReason: "自己都合", retirementRemarks: "" }); }} style={{ padding: "8px 16px", fontSize: 13, color: C.red, background: "#fff0f0", border: "none", borderRadius: 6, cursor: "pointer" }}>
-                      退職処理
-                    </button>
-                  </>
-                )}
-              </div>
+              {editingEmployee ? (
+                <>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    <FormField label="氏名 *" value={editEmpForm.name} onChange={(v) => setEditEmpForm({ ...editEmpForm, name: v })} />
+                    <FormField label="従業員番号" value={editEmpForm.employeeNumber} onChange={(v) => setEditEmpForm({ ...editEmpForm, employeeNumber: v })} />
+                    <FormField label="メールアドレス" value={editEmpForm.email} onChange={(v) => setEditEmpForm({ ...editEmpForm, email: v })} />
+                    {departments.length > 0 && (
+                      <div>
+                        <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 4 }}>部署</label>
+                        <select value={editEmpForm.departmentId} onChange={(e) => setEditEmpForm({ ...editEmpForm, departmentId: e.target.value })} style={{ width: "100%", padding: "8px 12px", border: "1px solid #e8e2da", borderRadius: 6, fontSize: 14, background: "#fff" }}>
+                          <option value="">なし</option>
+                          {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                    <button onClick={() => setEditingEmployee(false)} style={{ padding: "8px 16px", fontSize: 13, color: C.gray, background: C.cream, border: "none", borderRadius: 6, cursor: "pointer" }}>キャンセル</button>
+                    <button onClick={saveEditEmployee} style={{ padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 6, cursor: "pointer" }}>保存</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
+                      <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>従業員番号</span><div style={{ fontSize: 14 }}>{selectedEmployee.employeeNumber || "未設定"}</div></div>
+                      <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>メール</span><div style={{ fontSize: 14 }}>{selectedEmployee.email || "未設定"}</div></div>
+                      {departments.length > 0 && <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>部署</span><div style={{ fontSize: 14 }}>{getDeptName(selectedEmployee.departmentId)}</div></div>}
+                    </div>
+                    <button onClick={startEditEmployee} style={{ padding: "4px 12px", fontSize: 12, color: C.navy, background: C.pale, border: "none", borderRadius: 4, cursor: "pointer" }}>編集</button>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                    {selectedEmployee.status === "active" && (
+                      <>
+                        <button onClick={() => { setEditContract(null); setShowContractForm(true); }} style={{ padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 6, cursor: "pointer" }}>
+                          + 新しい契約書
+                        </button>
+                        <button onClick={() => { setShowRetireModal(selectedEmployee); setRetireForm({ retirementReason: "自己都合", retirementRemarks: "" }); }} style={{ padding: "8px 16px", fontSize: 13, color: C.red, background: "#fff0f0", border: "none", borderRadius: 6, cursor: "pointer" }}>
+                          退職処理
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* アラート */}
