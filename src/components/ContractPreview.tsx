@@ -279,7 +279,7 @@ export default function ContractPreview({ contract, employee, company, onClose }
                 上記について承諾しました。　令和{contract.issueDateYear}年{contract.issueDateMonth}月{contract.issueDateDay}日
               </div>
               <div style={{ marginTop: 32, fontSize: 13 }}>
-                <div style={{ marginLeft: 280 }}>従業員　　住所</div>
+                <div style={{ marginLeft: 280 }}>従業員　　住所　{employee.address || ""}</div>
                 <div style={{ marginLeft: 280, marginTop: 20, borderBottom: "1px solid #333", display: "inline-block", paddingBottom: 4 }}>
                   氏名　{employee.name}　　㊞
                 </div>
