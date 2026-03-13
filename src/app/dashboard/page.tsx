@@ -48,7 +48,7 @@ function DashboardContent() {
 
   // 従業員編集
   const [editingEmployee, setEditingEmployee] = useState(false);
-  const [editEmpForm, setEditEmpForm] = useState({ name: "", employeeNumber: "", email: "", departmentId: "" });
+  const [editEmpForm, setEditEmpForm] = useState({ name: "", employeeNumber: "", address: "", email: "", departmentId: "" });
 
   // 退職モーダル
   const [showRetireModal, setShowRetireModal] = useState<Employee | null>(null);
@@ -65,7 +65,7 @@ function DashboardContent() {
   const [editingCompany, setEditingCompany] = useState(false);
 
   // 新規従業員フォーム
-  const [empForm, setEmpForm] = useState({ name: "", employeeNumber: "", email: "", departmentId: "" });
+  const [empForm, setEmpForm] = useState({ name: "", employeeNumber: "", address: "", email: "", departmentId: "" });
 
   // 部署フォーム（シンプル）
   const [deptForm, setDeptForm] = useState({
@@ -197,12 +197,12 @@ function DashboardContent() {
     if (!user || !empForm.name) { alert("氏名は必須です"); return; }
     const ref = await addDoc(collection(db, "employees"), {
       userId: user.uid, name: empForm.name, employeeNumber: empForm.employeeNumber,
-      email: empForm.email, departmentId: empForm.departmentId, status: "active",
+      address: empForm.address, email: empForm.email, departmentId: empForm.departmentId, status: "active",
       createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
     });
     setShowEmpForm(false);
-    const newEmp: Employee = { id: ref.id, userId: user.uid, name: empForm.name, employeeNumber: empForm.employeeNumber, email: empForm.email, departmentId: empForm.departmentId, status: "active", retiredAt: null, retirementReason: "", retirementRemarks: "", createdAt: null, updatedAt: null };
-    setEmpForm({ name: "", employeeNumber: "", email: "", departmentId: "" });
+    const newEmp: Employee = { id: ref.id, userId: user.uid, name: empForm.name, employeeNumber: empForm.employeeNumber, address: empForm.address, email: empForm.email, departmentId: empForm.departmentId, status: "active", retiredAt: null, retirementReason: "", retirementRemarks: "", createdAt: null, updatedAt: null };
+    setEmpForm({ name: "", employeeNumber: "", address: "", email: "", departmentId: "" });
     setSelectedEmployee(newEmp);
     setPage("employees");
     setEditContract(null);
@@ -215,6 +215,7 @@ function DashboardContent() {
     setEditEmpForm({
       name: selectedEmployee.name || "",
       employeeNumber: selectedEmployee.employeeNumber || "",
+      address: selectedEmployee.address || "",
       email: selectedEmployee.email || "",
       departmentId: selectedEmployee.departmentId || "",
     });
@@ -224,7 +225,7 @@ function DashboardContent() {
     if (!user || !selectedEmployee || !editEmpForm.name) { alert("氏名は必須です"); return; }
     await updateDoc(doc(db, "employees", selectedEmployee.id), {
       name: editEmpForm.name, employeeNumber: editEmpForm.employeeNumber,
-      email: editEmpForm.email, departmentId: editEmpForm.departmentId,
+      address: editEmpForm.address, email: editEmpForm.email, departmentId: editEmpForm.departmentId,
       updatedAt: serverTimestamp(),
     });
     setSelectedEmployee({ ...selectedEmployee, ...editEmpForm });
@@ -566,7 +567,7 @@ function DashboardContent() {
                   <option value="retired">退職</option>
                 </select>
               </div>
-              <button onClick={() => { setEmpForm({ name: "", employeeNumber: "", email: "", departmentId: "" }); setShowEmpForm(true); }} style={{ padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 6, cursor: "pointer" }}>
+              <button onClick={() => { setEmpForm({ name: "", employeeNumber: "", address: "", email: "", departmentId: "" }); setShowEmpForm(true); }} style={{ padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 6, cursor: "pointer" }}>
                 + 従業員追加
               </button>
             </div>
@@ -624,6 +625,7 @@ function DashboardContent() {
                   <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                     <FormField label="氏名 *" value={editEmpForm.name} onChange={(v) => setEditEmpForm({ ...editEmpForm, name: v })} />
                     <FormField label="従業員番号" value={editEmpForm.employeeNumber} onChange={(v) => setEditEmpForm({ ...editEmpForm, employeeNumber: v })} />
+                    <FormField label="住所" value={editEmpForm.address} onChange={(v) => setEditEmpForm({ ...editEmpForm, address: v })} />
                     <FormField label="メールアドレス" value={editEmpForm.email} onChange={(v) => setEditEmpForm({ ...editEmpForm, email: v })} />
                     {departments.length > 0 && (
                       <div>
@@ -645,6 +647,7 @@ function DashboardContent() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
                       <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>従業員番号</span><div style={{ fontSize: 14 }}>{selectedEmployee.employeeNumber || "未設定"}</div></div>
+                      <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>住所</span><div style={{ fontSize: 14 }}>{selectedEmployee.address || "未設定"}</div></div>
                       <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>メール</span><div style={{ fontSize: 14 }}>{selectedEmployee.email || "未設定"}</div></div>
                       {departments.length > 0 && <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>部署</span><div style={{ fontSize: 14 }}>{getDeptName(selectedEmployee.departmentId)}</div></div>}
                     </div>
@@ -756,6 +759,7 @@ function DashboardContent() {
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <FormField label="氏名 *" value={empForm.name} onChange={(v) => setEmpForm({ ...empForm, name: v })} />
               <FormField label="従業員番号" value={empForm.employeeNumber} onChange={(v) => setEmpForm({ ...empForm, employeeNumber: v })} placeholder="任意" />
+              <FormField label="住所" value={empForm.address} onChange={(v) => setEmpForm({ ...empForm, address: v })} />
               <FormField label="メールアドレス" value={empForm.email} onChange={(v) => setEmpForm({ ...empForm, email: v })} placeholder="契約書送信用" />
               {departments.length > 0 && (
                 <div>

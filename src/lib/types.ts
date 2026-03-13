@@ -41,6 +41,7 @@ export type Employee = {
   departmentId: string; // 空文字 = 部署なし
   employeeNumber: string;
   name: string;
+  address: string;
   email: string;
   status: string; // active | leave | retired
   retiredAt: unknown;
