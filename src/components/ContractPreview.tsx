@@ -80,11 +80,13 @@ export default function ContractPreview({ contract, employee, company, onClose }
             {title}
           </h1>
 
-          {/* ヘッダー: 氏名殿 + 事業所情報 */}
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, fontSize: 13 }}>
-            <div>氏名　<span style={{ fontWeight: 600, borderBottom: "1px solid #333", paddingBottom: 1 }}>{employee.name}</span>　殿</div>
-            <div style={{ textAlign: "right" }}>事業所</div>
+          {/* 日付 右寄せ */}
+          <div style={{ textAlign: "right", fontSize: 13, marginBottom: 12 }}>
+            令和{contract.issueDateYear}年{contract.issueDateMonth}月{contract.issueDateDay}日
           </div>
+
+          {/* ヘッダー: 事業所情報 */}
+          <div style={{ textAlign: "right", fontSize: 13, marginBottom: 2 }}>事業所</div>
           <div style={{ textAlign: "right", fontSize: 13, marginBottom: 2 }}>
             所在地　{companyAddress}
           </div>
@@ -102,6 +104,11 @@ export default function ContractPreview({ contract, employee, company, onClose }
               代表取締役　{companyRep}
             </div>
           )}
+
+          {/* 氏名殿 */}
+          <div style={{ fontSize: 13, marginBottom: 12 }}>
+            氏名　<span style={{ fontWeight: 600, borderBottom: "1px solid #333", paddingBottom: 1 }}>{employee.name}</span>　殿
+          </div>
 
           <div style={{ fontSize: 13, marginBottom: 12 }}>雇用条件は次のとおりとします。</div>
 
@@ -280,8 +287,8 @@ export default function ContractPreview({ contract, employee, company, onClose }
               </div>
               <div style={{ marginTop: 32, fontSize: 13 }}>
                 <div style={{ marginLeft: 280 }}>従業員　　住所　{employee.address || ""}</div>
-                <div style={{ marginLeft: 280, marginTop: 20, borderBottom: "1px solid #333", display: "inline-block", paddingBottom: 4 }}>
-                  氏名　{employee.name}　　㊞
+                <div style={{ marginLeft: 280, marginTop: 20 }}>
+                  <span style={{ borderBottom: "1px solid #333", paddingBottom: 4 }}>氏名　{employee.name}　　㊞</span>
                 </div>
               </div>
             </>
