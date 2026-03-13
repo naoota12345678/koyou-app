@@ -40,6 +40,7 @@ function DashboardContent() {
   const [showEmpForm, setShowEmpForm] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [showContractForm, setShowContractForm] = useState(false);
+  const [editContract, setEditContract] = useState<Contract | null>(null);
   const [previewContract, setPreviewContract] = useState<Contract | null>(null);
   const [searchText, setSearchText] = useState("");
   const [filterDept, setFilterDept] = useState("");
@@ -200,6 +201,7 @@ function DashboardContent() {
     setEmpForm({ name: "", employeeNumber: "", email: "", departmentId: "" });
     setSelectedEmployee(newEmp);
     setPage("employees");
+    setEditContract(null);
     setShowContractForm(true);
   };
 
@@ -599,7 +601,7 @@ function DashboardContent() {
               <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
                 {selectedEmployee.status === "active" && (
                   <>
-                    <button onClick={() => setShowContractForm(true)} style={{ padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 6, cursor: "pointer" }}>
+                    <button onClick={() => { setEditContract(null); setShowContractForm(true); }} style={{ padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 6, cursor: "pointer" }}>
                       + 新しい契約書
                     </button>
                     <button onClick={() => { setShowRetireModal(selectedEmployee); setRetireForm({ retirementReason: "自己都合", retirementRemarks: "" }); }} style={{ padding: "8px 16px", fontSize: 13, color: C.red, background: "#fff0f0", border: "none", borderRadius: 6, cursor: "pointer" }}>
@@ -640,6 +642,7 @@ function DashboardContent() {
                           ) : (
                             <span style={{ fontSize: 11, color: C.red, fontWeight: 600 }}>未送信</span>
                           )}
+                          <button onClick={(e) => { e.stopPropagation(); setEditContract(c); setShowContractForm(true); }} style={{ padding: "3px 10px", fontSize: 11, color: C.navy, background: C.pale, border: "none", borderRadius: 4, cursor: "pointer" }}>編集</button>
                           <button onClick={(e) => { e.stopPropagation(); setPreviewContract(c); }} style={{ padding: "3px 10px", fontSize: 11, color: C.navy, background: C.pale, border: "none", borderRadius: 4, cursor: "pointer" }}>プレビュー</button>
                           <button style={{ padding: "3px 10px", fontSize: 11, color: C.navy, background: C.pale, border: "none", borderRadius: 4, cursor: "pointer" }}>PDF</button>
                         </div>
@@ -727,9 +730,10 @@ function DashboardContent() {
           department={departments.find((d) => d.id === selectedEmployee.departmentId)}
           allEmployees={employees}
           allContracts={contracts}
-          previousContract={selectedContracts[0]}
-          onClose={() => setShowContractForm(false)}
-          onSaved={() => setShowContractForm(false)}
+          editContract={editContract || undefined}
+          previousContract={editContract ? undefined : selectedContracts[0]}
+          onClose={() => { setShowContractForm(false); setEditContract(null); }}
+          onSaved={() => { setShowContractForm(false); setEditContract(null); }}
         />
       )}
 

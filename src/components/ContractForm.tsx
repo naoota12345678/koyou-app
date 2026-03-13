@@ -6,7 +6,7 @@ import { calcInsurance, calcIsTokutei, calcDocumentType, documentTypeLabel } fro
 import { FormField, SmallInput, CheckField, SelectField, RadioGroup } from "./FormParts";
 import ContractPreview from "./ContractPreview";
 import { User } from "firebase/auth";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, updateDoc, doc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 type ContractFormData = {
@@ -68,6 +68,7 @@ type Props = {
   department: Department | undefined;
   allEmployees: Employee[];
   allContracts: Contract[];
+  editContract?: Contract; // 編集対象（指定時は編集モード）
   previousContract?: Contract;
   onClose: () => void;
   onSaved: (contractId: string) => void;
@@ -78,26 +79,27 @@ const reiwaYear = String(now.getFullYear() - 2018);
 const thisMonth = String(now.getMonth() + 1);
 const thisDay = String(now.getDate());
 
-export default function ContractForm({ user, employee, company, department, allEmployees, allContracts, previousContract, onClose, onSaved }: Props) {
+export default function ContractForm({ user, employee, company, department, allEmployees, allContracts, editContract, previousContract, onClose, onSaved }: Props) {
+  const isEdit = !!editContract;
   const [step, setStep] = useState(1);
   const [savedContract, setSavedContract] = useState<Contract | null>(null);
 
-  // 前回の契約があればそれをベースに、なければデフォルト
+  // 編集時はその契約をベースに、新規は前回の契約をベースに
   const [form, setForm] = useState<ContractFormData>(() => {
-    const prev = previousContract;
+    const prev = editContract || previousContract;
     return {
-      issueDateYear: reiwaYear,
-      issueDateMonth: thisMonth,
-      issueDateDay: thisDay,
+      issueDateYear: editContract?.issueDateYear || reiwaYear,
+      issueDateMonth: editContract?.issueDateMonth || thisMonth,
+      issueDateDay: editContract?.issueDateDay || thisDay,
       employmentType: prev?.employmentType || "正社員",
       isYuki: prev?.isYuki ?? false,
       isKoyou: prev?.isKoyou ?? true,
-      contractStartYear: reiwaYear,
-      contractStartMonth: thisMonth,
-      contractStartDay: "1",
-      contractEndYear: "",
-      contractEndMonth: "",
-      contractEndDay: "",
+      contractStartYear: editContract?.contractStartYear || reiwaYear,
+      contractStartMonth: editContract?.contractStartMonth || thisMonth,
+      contractStartDay: editContract?.contractStartDay || "1",
+      contractEndYear: prev?.contractEndYear || "",
+      contractEndMonth: prev?.contractEndMonth || "",
+      contractEndDay: prev?.contractEndDay || "",
       renewalType: prev?.renewalType || "自動更新",
       trialPeriodMonths: prev?.trialPeriodMonths ?? 3,
       workplaceInitial: prev?.workplaceInitial || department?.address || company?.address || "",
@@ -130,11 +132,11 @@ export default function ContractForm({ user, employee, company, department, allE
       pensionFund: prev?.pensionFund ?? false,
       studentType: prev?.studentType || "学生でない",
       recruitmentSource: prev?.recruitmentSource || "直接",
-      remarks: "",
-      socialInsuranceOverride: false,
-      employmentInsuranceOverride: false,
-      socialInsuranceManual: false,
-      employmentInsuranceManual: false,
+      remarks: editContract?.remarks || "",
+      socialInsuranceOverride: editContract?.socialInsuranceOverride ?? false,
+      employmentInsuranceOverride: editContract?.employmentInsuranceOverride ?? false,
+      socialInsuranceManual: editContract?.socialInsurance ?? false,
+      employmentInsuranceManual: editContract?.employmentInsurance ?? false,
     };
   });
 
@@ -218,13 +220,16 @@ export default function ContractForm({ user, employee, company, department, allE
       studentType: form.studentType,
       recruitmentSource: form.recruitmentSource,
       remarks: form.remarks,
-      sentAt: null,
-      sentTo: "",
-      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
-    const docRef = await addDoc(collection(db, "contracts"), data);
-    setSavedContract({ ...data, id: docRef.id } as Contract);
+    if (isEdit) {
+      await updateDoc(doc(db, "contracts", editContract.id), data);
+      setSavedContract({ ...data, id: editContract.id, sentAt: editContract.sentAt, sentTo: editContract.sentTo, createdAt: editContract.createdAt } as Contract);
+    } else {
+      const fullData = { ...data, sentAt: null, sentTo: "", createdAt: serverTimestamp() };
+      const docRef = await addDoc(collection(db, "contracts"), fullData);
+      setSavedContract({ ...fullData, id: docRef.id } as Contract);
+    }
   };
 
   const stepTitles = ["雇用形態", "就業情報", "労働時間", "賃金・保険", "確認"];
@@ -248,10 +253,10 @@ export default function ContractForm({ user, employee, company, department, allE
       <div style={{ background: C.white, borderRadius: 12, padding: 32, width: 620, maxHeight: "85vh", overflow: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, color: C.navy }}>
-            {employee.name} さんの契約書作成
+            {employee.name} さんの契約書{isEdit ? "編集" : "作成"}
           </h2>
           <span style={{ fontSize: 12, color: C.gray }}>
-            {previousContract ? "契約更新" : "新規契約"}
+            {isEdit ? "編集" : previousContract ? "契約更新" : "新規契約"}
           </span>
         </div>
 
@@ -485,7 +490,7 @@ export default function ContractForm({ user, employee, company, department, allE
             </button>
           ) : (
             <button onClick={handleSave} style={{ padding: "8px 24px", fontSize: 13, fontWeight: 600, color: C.white, background: C.green, border: "none", borderRadius: 6, cursor: "pointer" }}>
-              保存してPDFプレビュー
+              {isEdit ? "更新してプレビュー" : "保存してプレビュー"}
             </button>
           )}
         </div>
