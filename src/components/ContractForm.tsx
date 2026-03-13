@@ -165,7 +165,10 @@ export default function ContractForm({ user, employee, company, department, allE
   const documentType = calcDocumentType(form.isYuki, form.isKoyou);
 
   // 保存
+  const [saving, setSaving] = useState(false);
   const handleSave = async () => {
+    setSaving(true);
+    try {
     const data = {
       userId: user.uid,
       departmentId: employee.departmentId,
@@ -222,13 +225,19 @@ export default function ContractForm({ user, employee, company, department, allE
       remarks: form.remarks,
       updatedAt: serverTimestamp(),
     };
-    if (isEdit) {
+    if (isEdit && editContract) {
       await updateDoc(doc(db, "contracts", editContract.id), data);
       setSavedContract({ ...data, id: editContract.id, sentAt: editContract.sentAt, sentTo: editContract.sentTo, createdAt: editContract.createdAt } as Contract);
     } else {
       const fullData = { ...data, sentAt: null, sentTo: "", createdAt: serverTimestamp() };
       const docRef = await addDoc(collection(db, "contracts"), fullData);
       setSavedContract({ ...fullData, id: docRef.id } as Contract);
+    }
+    } catch (e) {
+      console.error("保存エラー:", e);
+      alert("保存に失敗しました: " + (e as Error).message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -489,8 +498,8 @@ export default function ContractForm({ user, employee, company, department, allE
               次へ
             </button>
           ) : (
-            <button onClick={handleSave} style={{ padding: "8px 24px", fontSize: 13, fontWeight: 600, color: C.white, background: C.green, border: "none", borderRadius: 6, cursor: "pointer" }}>
-              {isEdit ? "更新してプレビュー" : "保存してプレビュー"}
+            <button onClick={handleSave} disabled={saving} style={{ padding: "8px 24px", fontSize: 13, fontWeight: 600, color: C.white, background: saving ? C.gray : C.green, border: "none", borderRadius: 6, cursor: saving ? "default" : "pointer" }}>
+              {saving ? "保存中..." : isEdit ? "更新してプレビュー" : "保存してプレビュー"}
             </button>
           )}
         </div>
