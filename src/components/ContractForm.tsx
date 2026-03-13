@@ -171,7 +171,7 @@ export default function ContractForm({ user, employee, company, department, allE
     try {
     const data = {
       userId: user.uid,
-      departmentId: employee.departmentId,
+      departmentId: employee.departmentId || "",
       employeeId: employee.id,
       documentType,
       issueDateYear: form.issueDateYear,
