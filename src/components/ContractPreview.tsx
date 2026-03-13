@@ -284,7 +284,7 @@ export default function ContractPreview({ contract, employee, company, onClose }
               <div style={{ marginTop: 32, fontSize: 13 }}>
                 <div style={{ marginLeft: 280 }}>従業員　　住所　{employee.address || ""}</div>
                 <div style={{ marginLeft: 280, marginTop: 20 }}>
-                  <span style={{ borderBottom: "1px solid #333", paddingBottom: 4 }}>氏名　{employee.name}　　㊞</span>
+                  <span style={{ marginLeft: "4em", borderBottom: "1px solid #333", paddingBottom: 4 }}>氏名　{employee.name}　　㊞</span>
                 </div>
               </div>
             </>
