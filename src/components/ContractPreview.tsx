@@ -69,7 +69,8 @@ export default function ContractPreview({ contract, employee, company, onClose }
 
         {/* A4 用紙風 */}
         <div style={{
-          background: "#fff", padding: "48px 56px", minHeight: 1000,
+          background: "#fff", padding: "48px 56px",
+          width: "210mm", minHeight: "297mm", boxSizing: "border-box",
           boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
           fontFamily: "'Yu Mincho', 'Hiragino Mincho ProN', 'MS PMincho', serif",
           color: "#1a1a1a", lineHeight: 1.6, fontSize: 12,
@@ -85,10 +86,10 @@ export default function ContractPreview({ contract, employee, company, onClose }
             令和{contract.issueDateYear}年{contract.issueDateMonth}月{contract.issueDateDay}日
           </div>
 
-          {/* ヘッダー: 事業所情報 */}
-          <div style={{ textAlign: "right", fontSize: 13, marginBottom: 2 }}>事業所</div>
-          <div style={{ textAlign: "right", fontSize: 13, marginBottom: 2 }}>
-            所在地　{companyAddress}
+          {/* ヘッダー: 氏名殿（左）+ 事業所情報（右）同じ高さ */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 2, fontSize: 13 }}>
+            <div>氏名　<span style={{ fontWeight: 600, borderBottom: "1px solid #333", paddingBottom: 1 }}>{employee.name}</span>　殿</div>
+            <div style={{ textAlign: "right" }}>所在地　{companyAddress}</div>
           </div>
           <div style={{ textAlign: "right", fontSize: 13, marginBottom: 2 }}>
             名　称　{companyName}
@@ -104,11 +105,6 @@ export default function ContractPreview({ contract, employee, company, onClose }
               代表取締役　{companyRep}
             </div>
           )}
-
-          {/* 氏名殿 */}
-          <div style={{ fontSize: 13, marginBottom: 12 }}>
-            氏名　<span style={{ fontWeight: 600, borderBottom: "1px solid #333", paddingBottom: 1 }}>{employee.name}</span>　殿
-          </div>
 
           <div style={{ fontSize: 13, marginBottom: 12 }}>雇用条件は次のとおりとします。</div>
 
@@ -282,7 +278,7 @@ export default function ContractPreview({ contract, employee, company, onClose }
           {/* フッター */}
           {isKoyou ? (
             <>
-              <div style={{ marginTop: 32, fontSize: 13 }}>
+              <div style={{ marginTop: 32, fontSize: 13, textAlign: "right" }}>
                 上記について承諾しました。　令和{contract.issueDateYear}年{contract.issueDateMonth}月{contract.issueDateDay}日
               </div>
               <div style={{ marginTop: 32, fontSize: 13 }}>
