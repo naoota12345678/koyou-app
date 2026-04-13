@@ -88,8 +88,25 @@ function mapRow(raw: Record<string, string>): ParsedRow | null {
   if (!name) return null;
 
   const isYuki = raw["期間の定め[有]"] === "1";
-  const startTime = parseTime(raw["始業時刻"]);
-  const endTime = parseTime(raw["終業時刻"]);
+
+  // 勤務時間: 固定→変形→フレックスの順で探す
+  const isFixed = raw["①固定勤務[適用]"] === "1";
+  const isHenkei = raw["②変形労働時間制[適用]"] === "1";
+  let startTimeStr = "";
+  let endTimeStr = "";
+  if (isFixed) {
+    startTimeStr = raw["始業時刻"] || "";
+    endTimeStr = raw["終業時刻"] || "";
+  } else if (isHenkei) {
+    startTimeStr = raw["①始業時刻"] || "";
+    endTimeStr = raw["①終業時刻"] || "";
+  } else {
+    // フレックス等: どこかに入っている時刻を探す
+    startTimeStr = raw["始業時刻"] || raw["①始業時刻"] || "";
+    endTimeStr = raw["終業時刻"] || raw["①終業時刻"] || "";
+  }
+  const startTime = parseTime(startTimeStr);
+  const endTime = parseTime(endTimeStr);
 
   // 雇用形態マッピング
   const empType = raw["雇用形態"] || "正社員";
