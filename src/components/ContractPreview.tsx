@@ -30,29 +30,13 @@ export default function ContractPreview({ contract, employee, company, onClose }
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfW = pdf.internal.pageSize.getWidth();
       const pdfH = pdf.internal.pageSize.getHeight();
-      const imgW = canvas.width;
-      const imgH = canvas.height;
-      const ratio = pdfW / imgW;
-      const scaledH = imgH * ratio;
-      if (scaledH <= pdfH) {
-        pdf.addImage(imgData, "PNG", 0, 0, pdfW, scaledH);
-      } else {
-        let yOffset = 0;
-        while (yOffset < imgH) {
-          const sliceH = Math.min(pdfH / ratio, imgH - yOffset);
-          const sliceCanvas = document.createElement("canvas");
-          sliceCanvas.width = imgW;
-          sliceCanvas.height = sliceH;
-          const ctx = sliceCanvas.getContext("2d");
-          if (ctx) {
-            ctx.drawImage(canvas, 0, yOffset, imgW, sliceH, 0, 0, imgW, sliceH);
-            const sliceData = sliceCanvas.toDataURL("image/png");
-            if (yOffset > 0) pdf.addPage();
-            pdf.addImage(sliceData, "PNG", 0, 0, pdfW, sliceH * ratio);
-          }
-          yOffset += sliceH;
-        }
-      }
+      // A4に収まるようにスケーリング（幅・高さの小さい方の比率に合わせる）
+      const ratioW = pdfW / canvas.width;
+      const ratioH = pdfH / canvas.height;
+      const ratio = Math.min(ratioW, ratioH);
+      const imgW = canvas.width * ratio;
+      const imgH = canvas.height * ratio;
+      pdf.addImage(imgData, "PNG", 0, 0, imgW, imgH);
       pdf.save(`${title}_${employee.name}.pdf`);
     } catch (e) {
       console.error("PDF生成エラー:", e);
