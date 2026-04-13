@@ -119,11 +119,12 @@ function mapRow(raw: Record<string, string>): ParsedRow | null {
   if (raw["契約の更新の判断[会社の経営状況]"] === "1") renewalItems.push("会社の経営状況");
   if (raw["契約の更新の判断[従事している業務の進捗状況]"] === "1") renewalItems.push("業務進捗状況");
 
-  // 更新タイプ
+  // 更新タイプ（ContractFormの選択肢: 自動更新/更新あり/更新なし/その他）
   let renewalType = "自動更新";
   if (raw["契約の更新の有無[自動的に更新する]"] === "1") renewalType = "自動更新";
-  else if (raw["契約の更新の有無[更新する場合がある]"] === "1") renewalType = "条件付き更新";
+  else if (raw["契約の更新の有無[更新する場合がある]"] === "1") renewalType = "更新あり";
   else if (raw["契約の更新の有無[契約の更新はしない]"] === "1") renewalType = "更新なし";
+  else if (raw["契約の更新の有無[その他]"] === "1") renewalType = "その他";
 
   // 賃金タイプ判定（金額は「ハ 時間給」「イ 基本給」カラムに入る）
   const hourlyWageVal = Number(raw["ハ 時間給"] || raw["ハ"] || 0);
