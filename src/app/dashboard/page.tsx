@@ -236,6 +236,17 @@ function DashboardContent() {
     setEditingEmployee(false);
   };
 
+  // 従業員削除（契約書も一緒に削除）
+  const handleDeleteEmployee = async (emp: Employee) => {
+    if (!confirm(`「${emp.name}」さんを削除しますか？\n関連する契約書もすべて削除されます。この操作は取り消せません。`)) return;
+    const empContracts = contracts.filter((c) => c.employeeId === emp.id);
+    for (const c of empContracts) {
+      await deleteDoc(doc(db, "contracts", c.id));
+    }
+    await deleteDoc(doc(db, "employees", emp.id));
+    if (selectedEmployee?.id === emp.id) setSelectedEmployee(null);
+  };
+
   // 退職処理
   const handleRetire = async () => {
     if (!showRetireModal) return;
@@ -671,6 +682,9 @@ function DashboardContent() {
                         </button>
                       </>
                     )}
+                    <button onClick={() => handleDeleteEmployee(selectedEmployee)} style={{ padding: "8px 16px", fontSize: 13, color: C.red, background: "transparent", border: `1px solid ${C.red}`, borderRadius: 6, cursor: "pointer", marginLeft: "auto" }}>
+                      削除
+                    </button>
                   </div>
                 </>
               )}
