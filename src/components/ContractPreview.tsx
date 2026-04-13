@@ -124,7 +124,7 @@ export default function ContractPreview({ contract, employee, company, onClose }
                     <>
                       <div>期間の定めあり（令和{contract.contractStartYear}年{contract.contractStartMonth}月{contract.contractStartDay}日　～　令和{contract.contractEndYear}年{contract.contractEndMonth}月{contract.contractEndDay}日）</div>
                       <div style={{ marginTop: 4 }}>１　契約の更新の有無</div>
-                      <div>［　{sel(contract.renewalType, ["自動的に更新する", "更新の場合あり", "契約の更新は無", "その他"])}　］</div>
+                      <div>［　{(() => { const map: Record<string, string> = { "自動更新": "自動的に更新する", "更新あり": "更新の場合あり", "更新なし": "契約の更新は無", "その他": "その他" }; const labels = ["自動的に更新する", "更新の場合あり", "契約の更新は無", "その他"]; const matched = map[contract.renewalType] || contract.renewalType; return sel(matched, labels); })()}　］</div>
                       <div style={{ marginTop: 4 }}>２　契約の更新は次により判断する</div>
                       <div>・契約期間満了時の業務量　・勤務成績、態度　・能力　・会社の経営状況</div>
                       <div>・従事している業務の進捗状況　・その他（　　　）</div>
