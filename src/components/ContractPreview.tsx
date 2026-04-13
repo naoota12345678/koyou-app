@@ -325,21 +325,9 @@ export default function ContractPreview({ contract, employee, company, onClose }
               <div style={{ marginTop: 32, fontSize: 13, textAlign: "right" }}>
                 上記について承諾しました。　令和{contract.issueDateYear}年{contract.issueDateMonth}月{contract.issueDateDay}日
               </div>
-              <div style={{ marginTop: 32, fontSize: 13 }}>
-                <table style={{ marginLeft: 280, borderCollapse: "collapse" }}>
-                  <tbody>
-                    <tr>
-                      <td style={{ fontSize: 13, paddingRight: 8, whiteSpace: "nowrap", verticalAlign: "top" }}>従業員</td>
-                      <td style={{ fontSize: 13, verticalAlign: "top" }}></td>
-                    </tr>
-                    <tr>
-                      <td style={{ paddingTop: 16 }}></td>
-                      <td style={{ paddingTop: 16, fontSize: 13 }}>
-                        <span style={{ borderBottom: "1px solid #333", paddingBottom: 4 }}>氏名　{employee.name}　　㊞</span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+              <div style={{ marginTop: 32, fontSize: 13, marginLeft: 280 }}>
+                <span>従業員　</span>
+                <span style={{ borderBottom: "1px solid #333", paddingBottom: 4 }}>氏名　{employee.name}　　㊞</span>
               </div>
             </>
           ) : (
