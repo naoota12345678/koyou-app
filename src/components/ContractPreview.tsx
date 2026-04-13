@@ -197,7 +197,8 @@ export default function ContractPreview({ contract, employee, company, onClose }
               <tr>
                 <td style={thStyle}>就業の場所</td>
                 <td style={tdStyle}>
-                  （雇入れ直後）{contract.workplaceInitial || ""}　　　（変更の範囲）{contract.workplaceRange || ""}
+                  <div>（雇入れ直後）{contract.workplaceInitial || ""}</div>
+                  <div>（変更の範囲）{contract.workplaceRange || ""}</div>
                 </td>
               </tr>
 
@@ -205,7 +206,8 @@ export default function ContractPreview({ contract, employee, company, onClose }
               <tr>
                 <td style={thStyle}>従事する<br />業務の内容</td>
                 <td style={tdStyle}>
-                  （雇入れ直後）{contract.jobContentInitial || ""}　　　（変更の範囲）{contract.jobContentRange || ""}
+                  <div>（雇入れ直後）{contract.jobContentInitial || ""}</div>
+                  <div>（変更の範囲）{contract.jobContentRange || ""}</div>
                 </td>
               </tr>
 
