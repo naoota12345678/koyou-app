@@ -219,9 +219,11 @@ export default function ContractPreview({ contract, employee, company, onClose }
                   <div>
                     ロ　通勤手当（{contract.commuteAllowance ? <span style={markStyle}>{contract.commuteAllowance.toLocaleString()}</span> : "　　　　　"}円／{contract.commuteAllowanceType === "daily" ? "日" : "月"}　{contract.commuteAllowanceMax ? <>上限<span style={markStyle}>{contract.commuteAllowanceMax.toLocaleString()}</span>円／月</> : "上限　　円／月"}　）
                   </div>
+                  {contract.salaryType !== "hourly" && (
                   <div style={{ marginTop: 4 }}>
                     総支給額　<span style={markStyle}>{contract.totalSalary?.toLocaleString() || 0}</span>円
                   </div>
+                  )}
                   <div style={{ marginTop: 8 }}>３　法定時間外、休日又は深夜労働に対して支払われる割増賃金率</div>
                   <div>時間外　法定超　月60時間以内：　125％　　月60時間超：　150％</div>
                   <div>休日　　法定休日：　135％　　深夜：　25％</div>
@@ -286,7 +288,7 @@ export default function ContractPreview({ contract, employee, company, onClose }
                   <tbody>
                     <tr>
                       <td style={{ fontSize: 13, paddingRight: 8, whiteSpace: "nowrap", verticalAlign: "top" }}>従業員</td>
-                      <td style={{ fontSize: 13, verticalAlign: "top" }}>住所　{employee.address || ""}</td>
+                      <td style={{ fontSize: 13, verticalAlign: "top" }}></td>
                     </tr>
                     <tr>
                       <td style={{ paddingTop: 16 }}></td>
