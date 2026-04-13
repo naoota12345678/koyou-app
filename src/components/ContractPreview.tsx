@@ -36,7 +36,9 @@ export default function ContractPreview({ contract, employee, company, onClose }
       const ratio = Math.min(ratioW, ratioH);
       const imgW = canvas.width * ratio;
       const imgH = canvas.height * ratio;
-      pdf.addImage(imgData, "PNG", 0, 0, imgW, imgH);
+      const xOffset = (pdfW - imgW) / 2;
+      const yOffset = (pdfH - imgH) / 2;
+      pdf.addImage(imgData, "PNG", xOffset, yOffset, imgW, imgH);
       pdf.save(`${title}_${employee.name}.pdf`);
     } catch (e) {
       console.error("PDF生成エラー:", e);
