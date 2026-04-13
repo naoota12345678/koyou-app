@@ -58,11 +58,18 @@ function parseCSV(text: string): Record<string, string>[] {
   const lines = text.split(/\r?\n/).filter((l) => l.trim());
   if (lines.length < 2) return [];
   const headers = lines[0].split(",");
+  // 重複カラム名に連番を付与（2個目以降: "始業時刻_2", "始業時刻_3"...）
+  const seen: Record<string, number> = {};
+  const uniqueHeaders = headers.map((h) => {
+    const key = h.trim();
+    seen[key] = (seen[key] || 0) + 1;
+    return seen[key] === 1 ? key : `${key}_${seen[key]}`;
+  });
   const rows: Record<string, string>[] = [];
   for (let i = 1; i < lines.length; i++) {
     const vals = lines[i].split(",");
     const row: Record<string, string> = {};
-    headers.forEach((h, idx) => { row[h.trim()] = (vals[idx] || "").trim(); });
+    uniqueHeaders.forEach((h, idx) => { row[h] = (vals[idx] || "").trim(); });
     rows.push(row);
   }
   return rows;
