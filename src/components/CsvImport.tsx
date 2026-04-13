@@ -108,9 +108,10 @@ function mapRow(raw: Record<string, string>): ParsedRow | null {
   else if (raw["契約の更新の有無[更新する場合がある]"] === "1") renewalType = "条件付き更新";
   else if (raw["契約の更新の有無[契約の更新はしない]"] === "1") renewalType = "更新なし";
 
-  // 賃金タイプ判定
-  const hasHourly = Number(raw["ハ"] || 0) > 0;
-  const salaryType = hasHourly ? "hourly" : "monthly";
+  // 賃金タイプ判定（金額は「ハ 時間給」「イ 基本給」カラムに入る）
+  const hourlyWageVal = Number(raw["ハ 時間給"] || raw["ハ"] || 0);
+  const basicSalaryVal = Number(raw["イ 基本給"] || raw["イ"] || 0);
+  const salaryType = hourlyWageVal > 0 ? "hourly" : "monthly";
 
   // 週労働時間
   const weeklyHoursStr = raw["所定週労働時間"] || "";
@@ -123,14 +124,14 @@ function mapRow(raw: Record<string, string>): ParsedRow | null {
   }
   if (!weeklyHours) weeklyHours = 40;
 
-  // 通勤手当
+  // 通勤手当（「ホ その他」「ホ」「イ」等のカラムから通勤情報を探す）
   let commuteAllowance = 0;
   let commuteAllowanceType = "monthly";
-  const hoCol = raw["ホ"] || "";
-  const commuteMatch = hoCol.match(/(\d+)\s*円/);
+  const commuteSource = [raw["ホ その他"], raw["ホ"], raw["イ"], raw["ロ"]].find((v) => v && /通勤|交通/.test(v)) || "";
+  const commuteMatch = commuteSource.match(/(\d+)\s*円/);
   if (commuteMatch) {
     commuteAllowance = parseInt(commuteMatch[1]);
-    if (hoCol.includes("/日") || hoCol.includes("日額")) {
+    if (commuteSource.includes("/日") || commuteSource.includes("日額")) {
       commuteAllowanceType = "daily";
     }
   }
@@ -169,8 +170,8 @@ function mapRow(raw: Record<string, string>): ParsedRow | null {
     endMinute: endTime.minute,
     weeklyHours,
     salaryType,
-    basicSalary: Number(raw["イ"] || 0),
-    hourlyWage: Number(raw["ハ"] || 0),
+    basicSalary: basicSalaryVal,
+    hourlyWage: hourlyWageVal,
     commuteAllowance,
     commuteAllowanceType,
     payClosingDay,
@@ -243,12 +244,10 @@ export default function CsvImport({ user, company, onClose, onDone }: Props) {
         const isKoyou = true; // 雇用契約書として作成
         const documentType = calcDocumentType(row.isYuki, isKoyou);
 
-        // 総支給額計算
+        // 総支給額計算（時給の人は0）
         let totalSalary = 0;
         if (row.salaryType === "monthly") {
           totalSalary = row.basicSalary + row.commuteAllowance;
-        } else {
-          totalSalary = row.hourlyWage * row.weeklyHours * 4 + row.commuteAllowance;
         }
 
         // 社保・雇保（CSVの値をそのまま使用、overrideとして設定）
