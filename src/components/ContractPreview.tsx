@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { C, Company, Contract, Employee } from "@/lib/types";
 
 type Props = {
@@ -12,9 +13,54 @@ type Props = {
 const isKoyouType = (type: string) => type === "koyou_muki" || type === "koyou_yuki";
 
 export default function ContractPreview({ contract, employee, company, onClose }: Props) {
+  const printRef = useRef<HTMLDivElement>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const isKoyou = isKoyouType(contract.documentType);
   const isYuki = contract.isYuki;
   const title = isKoyou ? "雇用契約書" : "労働条件通知書";
+
+  const handlePdf = async () => {
+    if (!printRef.current) return;
+    setPdfLoading(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const jsPDF = (await import("jspdf")).default;
+      const canvas = await html2canvas(printRef.current, { scale: 2, useCORS: true, backgroundColor: "#fff" });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+      const imgW = canvas.width;
+      const imgH = canvas.height;
+      const ratio = pdfW / imgW;
+      const scaledH = imgH * ratio;
+      if (scaledH <= pdfH) {
+        pdf.addImage(imgData, "PNG", 0, 0, pdfW, scaledH);
+      } else {
+        let yOffset = 0;
+        while (yOffset < imgH) {
+          const sliceH = Math.min(pdfH / ratio, imgH - yOffset);
+          const sliceCanvas = document.createElement("canvas");
+          sliceCanvas.width = imgW;
+          sliceCanvas.height = sliceH;
+          const ctx = sliceCanvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(canvas, 0, yOffset, imgW, sliceH, 0, 0, imgW, sliceH);
+            const sliceData = sliceCanvas.toDataURL("image/png");
+            if (yOffset > 0) pdf.addPage();
+            pdf.addImage(sliceData, "PNG", 0, 0, pdfW, sliceH * ratio);
+          }
+          yOffset += sliceH;
+        }
+      }
+      pdf.save(`${title}_${employee.name}.pdf`);
+    } catch (e) {
+      console.error("PDF生成エラー:", e);
+      alert("PDF生成に失敗しました");
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
   const companyName = company?.name || "";
   const companyAddress = company?.address || "";
@@ -55,6 +101,18 @@ export default function ContractPreview({ contract, employee, company, onClose }
         {/* 操作バー */}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 12 }}>
           <button
+            onClick={handlePdf}
+            disabled={pdfLoading}
+            style={{
+              padding: "8px 24px", fontSize: 13, fontWeight: 600,
+              color: C.white, background: pdfLoading ? C.gray : C.green,
+              border: "none", borderRadius: 6, cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+            }}
+          >
+            {pdfLoading ? "PDF生成中..." : "PDF出力"}
+          </button>
+          <button
             onClick={onClose}
             style={{
               padding: "8px 24px", fontSize: 13, fontWeight: 600,
@@ -68,7 +126,7 @@ export default function ContractPreview({ contract, employee, company, onClose }
         </div>
 
         {/* A4 用紙風 */}
-        <div style={{
+        <div ref={printRef} style={{
           background: "#fff", padding: "48px 56px",
           width: "210mm", minHeight: "297mm", boxSizing: "border-box",
           boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
