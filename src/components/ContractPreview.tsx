@@ -130,7 +130,7 @@ export default function ContractPreview({ contract, employee, company, onClose }
 
           {/* ヘッダー: 氏名殿（左）+ 事業所情報（右）同じ高さ */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 2, fontSize: 13 }}>
-            <div>氏名　<span style={{ fontWeight: 600, borderBottom: "1px solid #333", paddingBottom: 1 }}>{employee.name}</span>　殿</div>
+            <div>氏名　<span style={{ fontWeight: 600 }}>{employee.name}</span>　殿</div>
             <div style={{ textAlign: "right" }}>所在地　{companyAddress}</div>
           </div>
           <div style={{ textAlign: "right", fontSize: 13, marginBottom: 2 }}>
