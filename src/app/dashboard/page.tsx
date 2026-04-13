@@ -14,6 +14,7 @@ import { documentTypeLabel } from "@/lib/insurance";
 import { FormField, SmallInput, CheckField } from "@/components/FormParts";
 import ContractForm from "@/components/ContractForm";
 import ContractPreview from "@/components/ContractPreview";
+import CsvImport from "@/components/CsvImport";
 import { calcAlerts, Alert } from "@/lib/alerts";
 
 export default function DashboardPage() {
@@ -49,6 +50,9 @@ function DashboardContent() {
   // 従業員編集
   const [editingEmployee, setEditingEmployee] = useState(false);
   const [editEmpForm, setEditEmpForm] = useState({ name: "", employeeNumber: "", address: "", email: "", departmentId: "" });
+
+  // CSVインポート
+  const [showCsvImport, setShowCsvImport] = useState(false);
 
   // 退職モーダル
   const [showRetireModal, setShowRetireModal] = useState<Employee | null>(null);
@@ -570,6 +574,9 @@ function DashboardContent() {
               <button onClick={() => { setEmpForm({ name: "", employeeNumber: "", address: "", email: "", departmentId: "" }); setShowEmpForm(true); }} style={{ padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.white, background: C.navy, border: "none", borderRadius: 6, cursor: "pointer" }}>
                 + 従業員追加
               </button>
+              <button onClick={() => setShowCsvImport(true)} style={{ padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.navy, background: C.pale, border: `1px solid ${C.gold}`, borderRadius: 6, cursor: "pointer" }}>
+                CSVインポート
+              </button>
             </div>
 
             <div style={{ background: C.white, borderRadius: 8, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
@@ -831,6 +838,18 @@ function DashboardContent() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* CSVインポートモーダル */}
+      {showCsvImport && user && (
+        <CsvImport
+          user={user}
+          company={company}
+          allEmployees={employees}
+          allContracts={contracts}
+          onClose={() => setShowCsvImport(false)}
+          onDone={() => { setShowCsvImport(false); setPage("employees"); }}
+        />
       )}
     </div>
   );
