@@ -57,6 +57,8 @@ type ContractFormData = {
   retirementAllowance: boolean;
   retirementAllowanceDetail: string;
   pensionFund: boolean;
+  hasDeduction: boolean;
+  deductionItems: string[];
   studentType: string;
   recruitmentSource: string;
   remarks: string;
@@ -140,6 +142,8 @@ export default function ContractForm({ user, employee, company, department, allE
       retirementAllowance: prev?.retirementAllowance ?? company?.retirementAllowanceDefault ?? false,
       retirementAllowanceDetail: prev?.retirementAllowanceDetail || "",
       pensionFund: prev?.pensionFund ?? false,
+      hasDeduction: prev?.hasDeduction ?? true,
+      deductionItems: prev?.deductionItems || ["所得税", "雇用保険", "社会保険"],
       studentType: prev?.studentType || "学生でない",
       recruitmentSource: prev?.recruitmentSource || "直接",
       remarks: editContract?.remarks || "",
@@ -235,6 +239,8 @@ export default function ContractForm({ user, employee, company, department, allE
       pensionFund: form.pensionFund,
       socialInsuranceOverride: form.socialInsuranceOverride,
       employmentInsuranceOverride: form.employmentInsuranceOverride,
+      hasDeduction: form.hasDeduction,
+      deductionItems: form.deductionItems,
       studentType: form.studentType,
       recruitmentSource: form.recruitmentSource,
       remarks: form.remarks,
@@ -479,6 +485,19 @@ export default function ContractForm({ user, employee, company, department, allE
             <div style={{ display: "flex", gap: 16 }}>
               <FormField label="賃金締切日" value={form.payClosingDay} onChange={(v) => f("payClosingDay", v)} />
               <FormField label="支払日" value={form.paymentDay} onChange={(v) => f("paymentDay", v)} />
+            </div>
+            <div>
+              <CheckField label="賃金支払時の控除あり" checked={form.hasDeduction} onChange={(v) => f("hasDeduction", v)} />
+              {form.hasDeduction && (
+                <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
+                  {["所得税", "住民税", "雇用保険", "社会保険"].map((item) => (
+                    <CheckField key={item} label={item} checked={form.deductionItems.includes(item)} onChange={(v) => {
+                      if (v) f("deductionItems", [...form.deductionItems, item]);
+                      else f("deductionItems", form.deductionItems.filter((i: string) => i !== item));
+                    }} />
+                  ))}
+                </div>
+              )}
             </div>
             <div style={{ display: "flex", gap: 20 }}>
               <CheckField label="昇給あり" checked={form.increment} onChange={(v) => f("increment", v)} />

@@ -115,6 +115,9 @@ export type Contract = {
   pensionFund: boolean; // 厚生年金基金
   socialInsuranceOverride: boolean;
   employmentInsuranceOverride: boolean;
+  // 控除
+  hasDeduction: boolean;
+  deductionItems: string[];
   // 管理情報
   studentType: string;
   recruitmentSource: string;

@@ -44,6 +44,8 @@ type ParsedRow = {
   bonus: boolean;
   retirementAllowance: boolean;
   retirementAllowanceDetail: string;
+  hasDeduction: boolean;
+  deductionItems: string[];
   socialInsurance: boolean;
   employmentInsurance: boolean;
   remarks: string;
@@ -192,6 +194,14 @@ function mapRow(raw: Record<string, string>): ParsedRow | null {
   let retirementDetail = "";
   if (raw["年齢"]) retirementDetail = `定年${raw["年齢"]}`;
 
+  // 控除
+  const hasDeduction = raw["賃金支払時の控除[有]"] === "1";
+  const deductionItems: string[] = [];
+  if (raw["控除項目[所得税]"] === "1") deductionItems.push("所得税");
+  if (raw["控除項目[住民税]"] === "1") deductionItems.push("住民税");
+  if (raw["控除項目[雇用保険]"] === "1") deductionItems.push("雇用保険");
+  if (raw["控除項目[社会保険]"] === "1") deductionItems.push("社会保険");
+
   // 社保・雇保
   const socialInsurance = raw["社会保険の加入[有]"] === "1";
   const employmentInsurance = raw["雇用保険の加入[有]"] === "1";
@@ -224,6 +234,8 @@ function mapRow(raw: Record<string, string>): ParsedRow | null {
     bonus,
     retirementAllowance,
     retirementAllowanceDetail: retirementDetail,
+    hasDeduction,
+    deductionItems,
     socialInsurance,
     employmentInsurance,
     remarks: remarksText
@@ -353,6 +365,8 @@ export default function CsvImport({ user, company, onClose, onDone }: Props) {
           socialInsurance: row.socialInsurance,
           employmentInsurance: row.employmentInsurance,
           pensionFund: false,
+          hasDeduction: row.hasDeduction,
+          deductionItems: row.deductionItems,
           socialInsuranceOverride: true,
           employmentInsuranceOverride: true,
           studentType: "学生でない",
