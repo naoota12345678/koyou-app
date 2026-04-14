@@ -330,20 +330,12 @@ export default function ContractPreview({ contract, employee, company, onClose }
               </tr>
 
               {/* 備考 */}
-              {(() => {
-                const filtered = (contract.remarks || "")
-                  .replace(/上記時間内で[^。]*。/g, "")
-                  .replace(/業務の繁閑に合わせて[^。]*。/g, "")
-                  .replace(/休憩時間は[^。]*。/g, "")
-                  .replace(/シフト表を参照[^。]*。?/g, "")
-                  .trim();
-                return filtered ? (
-                  <tr>
-                    <td style={thStyle}>備考</td>
-                    <td style={tdStyle}>{filtered}</td>
-                  </tr>
-                ) : null;
-              })()}
+              {contract.remarks && (
+                <tr>
+                  <td style={thStyle}>備考</td>
+                  <td style={tdStyle}>{contract.remarks}</td>
+                </tr>
+              )}
 
               {/* 就業規則 */}
               <tr>

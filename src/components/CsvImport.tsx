@@ -226,7 +226,11 @@ function mapRow(raw: Record<string, string>): ParsedRow | null {
     retirementAllowanceDetail: retirementDetail,
     socialInsurance,
     employmentInsurance,
-    remarks: remarksText,
+    remarks: remarksText
+      .replace(/上記時間内で[^。]*。?/g, "")
+      .replace(/業務の繁閑に合わせて[^。]*。?/g, "")
+      .replace(/休憩時間[はの].*$/g, "")
+      .trim(),
     raw,
   };
 }
