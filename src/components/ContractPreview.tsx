@@ -256,7 +256,8 @@ export default function ContractPreview({ contract, employee, company, onClose }
                 <td style={tdStyle}>
                   <div>１　基本賃金：</div>
                   <div>
-                    基本給（{contract.salaryType === "monthly" ? <span style={markStyle}>{contract.basicSalary?.toLocaleString()}</span> : "　　　　　"}円）　時給（{contract.salaryType === "hourly" ? <span style={markStyle}>{contract.hourlyWage?.toLocaleString()}</span> : "　　　　　"}円）
+                    {contract.salaryType === "monthly" && <>基本給（<span style={markStyle}>{contract.basicSalary?.toLocaleString()}</span>円）</>}
+                    {contract.salaryType === "hourly" && <>時給（<span style={markStyle}>{contract.hourlyWage?.toLocaleString()}</span>円）</>}
                   </div>
                   <div style={{ marginTop: 4 }}>２　諸手当：</div>
                   <div>
@@ -273,7 +274,7 @@ export default function ContractPreview({ contract, employee, company, onClose }
                   <div style={{ marginTop: 8 }}>３　法定時間外、休日又は深夜労働に対して支払われる割増賃金率</div>
                   <div>時間外　法定超　月60時間以内：　125％　　月60時間超：　150％</div>
                   <div>休日　　法定休日：　135％　　深夜：　25％</div>
-                  <div style={{ marginTop: 4 }}>４　賃金締切日：毎月{contract.payClosingDay || "末日"}、賃金支払日：{contract.paymentDay || "翌月25日"}</div>
+                  <div style={{ marginTop: 4 }}>４　賃金締切日：{contract.payClosingDay || "毎月末日"}、賃金支払日：{contract.paymentDay || "翌月25日"}</div>
                   <div>５　支払方法：銀行振込</div>
                   <div>６　賃金支払時の控除：　有　（所得税、雇用保険、社会保険）</div>
                   <div>７　昇給：　{yesNo(contract.increment)}　〔勤務成績、業績等による〕</div>
