@@ -39,6 +39,7 @@ type ContractFormData = {
   weeklyHours: number;
   weeklyDays: number;
   workTimeSystem: string;
+  hasFlexibleSchedule: boolean;
   sideJobPolicy: string;
   teleworkAllowed: boolean;
   salaryType: string;
@@ -124,6 +125,7 @@ export default function ContractForm({ user, employee, company, department, allE
       weeklyHours: prev?.weeklyHours || company?.defaultWeeklyHours || 40,
       weeklyDays: prev?.weeklyDays || 5,
       workTimeSystem: prev?.workTimeSystem || "固定",
+      hasFlexibleSchedule: prev?.hasFlexibleSchedule ?? false,
       sideJobPolicy: prev?.sideJobPolicy || "届出制",
       teleworkAllowed: prev?.teleworkAllowed ?? false,
       salaryType: prev?.salaryType || "monthly",
@@ -217,6 +219,7 @@ export default function ContractForm({ user, employee, company, department, allE
       weeklyHours: form.weeklyHours,
       weeklyDays: form.weeklyDays,
       workTimeSystem: form.workTimeSystem,
+      hasFlexibleSchedule: form.hasFlexibleSchedule,
       sideJobPolicy: form.sideJobPolicy,
       teleworkAllowed: form.teleworkAllowed,
       salaryType: form.salaryType,
@@ -444,6 +447,7 @@ export default function ContractForm({ user, employee, company, department, allE
               { value: "みなし専門型", label: "みなし労働（専門型裁量）" },
               { value: "みなし企画業務型", label: "みなし労働（企画業務型）" },
             ]} />
+            <CheckField label="始業・終業の繰り上げ・繰り下げあり" checked={form.hasFlexibleSchedule} onChange={(v) => f("hasFlexibleSchedule", v)} />
             <div style={{ display: "flex", gap: 16 }}>
               <FormField label="週所定労働時間" value={String(form.weeklyHours)} onChange={(v) => f("weeklyHours", Number(v) || 0)} type="number" />
               <FormField label="週所定労働日数" value={String(form.weeklyDays)} onChange={(v) => f("weeklyDays", Number(v) || 0)} type="number" />

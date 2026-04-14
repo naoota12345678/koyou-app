@@ -91,6 +91,7 @@ export type Contract = {
   weeklyHours: number;
   weeklyDays: number;
   workTimeSystem: string; // "固定" | "変形1カ月" | "変形1年" | "変形1週間" | "フレックス" | "みなし事業場外" | "みなし専門型" | "みなし企画業務型"
+  hasFlexibleSchedule: boolean; // 繰り上げ繰り下げの有無
   sideJobPolicy: string;
   teleworkAllowed: boolean;
   // 賃金

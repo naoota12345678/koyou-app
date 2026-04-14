@@ -33,6 +33,7 @@ type ParsedRow = {
   endMinute: string;
   weeklyHours: number;
   workTimeSystem: string;
+  hasFlexibleSchedule: boolean;
   salaryType: string;
   basicSalary: number;
   hourlyWage: number;
@@ -158,16 +159,16 @@ function mapRow(raw: Record<string, string>): ParsedRow | null {
   const basicSalaryVal = Number(raw["イ 基本給"] || raw["イ"] || 0);
   const salaryType = hourlyWageVal > 0 ? "hourly" : "monthly";
 
-  // 週労働時間
+  // 週労働時間と繰り上げ繰り下げ情報を備考から読み取る
+  const remarksText = raw["備考"] || "";
   const weeklyHoursStr = raw["所定週労働時間"] || "";
   let weeklyHours = parseFloat(weeklyHoursStr) || 0;
-  // 備考から週時間を抽出（「週 20 時間」パターン）
-  const remarksText = raw["備考"] || "";
   if (!weeklyHours) {
     const match = remarksText.match(/週\s*(\d+)\s*時間/);
     if (match) weeklyHours = parseFloat(match[1]);
   }
   if (!weeklyHours) weeklyHours = 40;
+  const hasFlexibleSchedule = /繰り上げ|繰り下げ|繰上げ|繰下げ/.test(remarksText);
 
   // 通勤手当（「ホ その他」「ホ」「イ」等のカラムから通勤情報を探す）
   let commuteAllowance = 0;
@@ -223,6 +224,7 @@ function mapRow(raw: Record<string, string>): ParsedRow | null {
     endMinute: endTime.minute,
     weeklyHours,
     workTimeSystem,
+    hasFlexibleSchedule,
     salaryType,
     basicSalary: basicSalaryVal,
     hourlyWage: hourlyWageVal,
@@ -238,11 +240,7 @@ function mapRow(raw: Record<string, string>): ParsedRow | null {
     deductionItems,
     socialInsurance,
     employmentInsurance,
-    remarks: remarksText
-      .replace(/上記時間内で[^。]*。?/g, "")
-      .replace(/業務の繁閑に合わせて[^。]*。?/g, "")
-      .replace(/休憩時間[はの].*$/g, "")
-      .trim(),
+    remarks: "",
     raw,
   };
 }
@@ -344,6 +342,7 @@ export default function CsvImport({ user, company, onClose, onDone }: Props) {
           endMinute: row.endMinute,
           weeklyHours: row.weeklyHours,
           workTimeSystem: row.workTimeSystem,
+          hasFlexibleSchedule: row.hasFlexibleSchedule,
           weeklyDays: 5,
           sideJobPolicy: "届出制",
           teleworkAllowed: false,
