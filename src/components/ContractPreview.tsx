@@ -172,9 +172,9 @@ export default function ContractPreview({ contract, employee, company, onClose }
                       <div style={{ marginTop: 4 }}>２　契約の更新は次により判断する</div>
                       <div>・契約期間満了時の業務量　・勤務成績、態度　・能力　・会社の経営状況</div>
                       <div>・従事している業務の進捗状況　・その他（　　　）</div>
-                      <div style={{ marginTop: 4 }}>３　更新上限の有無（無・有（更新　　回まで／通算契約期間　　年まで））</div>
+                      <div style={{ marginTop: 4 }}>３　更新上限の有無（{contract.renewalLimitType === "無" || !contract.renewalLimitType ? <span style={markStyle}>無</span> : "無"}・{contract.renewalLimitType && contract.renewalLimitType !== "無" ? <span style={markStyle}>有</span> : "有"}（更新　{contract.renewalLimitType === "回数" ? <span style={markStyle}>{contract.renewalLimitCount}</span> : "　"}回まで／通算契約期間　{contract.renewalLimitType === "期間" ? <span style={markStyle}>{contract.renewalLimitYears}</span> : "　"}年まで））</div>
                       <div style={{ marginTop: 4 }}>【労働契約法に定める同一の企業との間での通算契約期間が５年を超える有期労働契約の締結の場合】</div>
-                      <div>本契約期間中に会社に対して期間の定めのない労働契約（無期労働契約）の締結の申込みをすることにより、本契約期間の末日の翌日から、無期労働契約での雇用に転換することができる。この場合の本契約からの労働条件の変更の有無（　無　・　有（別紙のとおり）　）</div>
+                      <div>本契約期間中に会社に対して期間の定めのない労働契約（無期労働契約）の締結の申込みをすることにより、本契約期間の末日の翌日から、無期労働契約での雇用に転換することができる。この場合の本契約からの労働条件の変更の有無（　{contract.conditionChangeType === "無" || !contract.conditionChangeType ? <span style={markStyle}>無</span> : "無"}　・　{contract.conditionChangeType === "有" ? <span style={markStyle}>有（別紙のとおり）</span> : "有（別紙のとおり）"}　）</div>
                     </>
                   ) : (
                     <>

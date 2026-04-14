@@ -73,6 +73,10 @@ export type Contract = {
   contractEndDay: string;
   renewalType: string;
   renewalJudgmentItems: string[];
+  renewalLimitType: string; // "無" | "回数" | "期間"
+  renewalLimitCount: number;
+  renewalLimitYears: number;
+  conditionChangeType: string; // "無" | "有"
   trialPeriodMonths: number;
   // 就業情報
   workplaceInitial: string;

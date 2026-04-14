@@ -23,6 +23,10 @@ type ContractFormData = {
   contractEndMonth: string;
   contractEndDay: string;
   renewalType: string;
+  renewalLimitType: string;
+  renewalLimitCount: number;
+  renewalLimitYears: number;
+  conditionChangeType: string;
   trialPeriodMonths: number;
   workplaceInitial: string;
   workplaceRange: string;
@@ -101,6 +105,10 @@ export default function ContractForm({ user, employee, company, department, allE
       contractEndMonth: prev?.contractEndMonth || "",
       contractEndDay: prev?.contractEndDay || "",
       renewalType: prev?.renewalType || "自動更新",
+      renewalLimitType: prev?.renewalLimitType || "無",
+      renewalLimitCount: prev?.renewalLimitCount || 0,
+      renewalLimitYears: prev?.renewalLimitYears || 0,
+      conditionChangeType: prev?.conditionChangeType || "無",
       trialPeriodMonths: prev?.trialPeriodMonths ?? 3,
       workplaceInitial: prev?.workplaceInitial || department?.address || company?.address || "",
       workplaceRange: prev?.workplaceRange || "会社の定める事業所",
@@ -187,6 +195,10 @@ export default function ContractForm({ user, employee, company, department, allE
       contractEndMonth: form.contractEndMonth,
       contractEndDay: form.contractEndDay,
       renewalType: form.renewalType,
+      renewalLimitType: form.renewalLimitType,
+      renewalLimitCount: form.renewalLimitCount,
+      renewalLimitYears: form.renewalLimitYears,
+      conditionChangeType: form.conditionChangeType,
       trialPeriodMonths: form.trialPeriodMonths,
       workplaceInitial: form.workplaceInitial,
       workplaceRange: form.workplaceRange,
@@ -350,6 +362,18 @@ export default function ContractForm({ user, employee, company, department, allE
                 <SelectField label="更新" value={form.renewalType} onChange={(v) => f("renewalType", v)} options={[
                   { value: "自動更新", label: "自動更新" }, { value: "更新あり", label: "更新あり" },
                   { value: "更新なし", label: "更新なし" }, { value: "その他", label: "その他" },
+                ]} />
+                <RadioGroup label="更新上限" value={form.renewalLimitType} onChange={(v) => f("renewalLimitType", v)} options={[
+                  { value: "無", label: "無" }, { value: "回数", label: "回数で制限" }, { value: "期間", label: "期間で制限" },
+                ]} />
+                {form.renewalLimitType === "回数" && (
+                  <FormField label="更新上限（回）" value={String(form.renewalLimitCount)} onChange={(v) => f("renewalLimitCount", Number(v) || 0)} type="number" />
+                )}
+                {form.renewalLimitType === "期間" && (
+                  <FormField label="通算契約期間（年）" value={String(form.renewalLimitYears)} onChange={(v) => f("renewalLimitYears", Number(v) || 0)} type="number" />
+                )}
+                <RadioGroup label="無期転換時の労働条件変更" value={form.conditionChangeType} onChange={(v) => f("conditionChangeType", v)} options={[
+                  { value: "無", label: "無" }, { value: "有", label: "有" },
                 ]} />
               </>
             ) : (
