@@ -32,6 +32,7 @@ type ParsedRow = {
   endHour: string;
   endMinute: string;
   weeklyHours: number;
+  workTimeSystem: string;
   salaryType: string;
   basicSalary: number;
   hourlyWage: number;
@@ -96,9 +97,27 @@ function mapRow(raw: Record<string, string>): ParsedRow | null {
 
   const isYuki = raw["期間の定め[有]"] === "1";
 
-  // 勤務時間: 固定→変形→フレックスの順で探す
+  // 勤務時間制度と時刻
   const isFixed = raw["①固定勤務[適用]"] === "1";
   const isHenkei = raw["②変形労働時間制[適用]"] === "1";
+  const isFlex = raw["③フレックスタイム制；始業及び終業の時刻は労働者の決定に委ねる。[適用]"] === "1";
+  const isMinarai = raw["④事業場外みなし労働時間制[適用]"] === "1";
+  const isSairyo = raw["⑤裁量労働制[適用]"] === "1";
+
+  let workTimeSystem = "固定";
+  if (isHenkei) {
+    if (raw["変形労働時間制等；交代制として、次の勤務時間の組み合わせによる[１ヶ月単位]"] === "1") workTimeSystem = "変形1カ月";
+    else if (raw["変形労働時間制等；交代制として、次の勤務時間の組み合わせによる[１年単位]"] === "1") workTimeSystem = "変形1年";
+    else if (raw["変形労働時間制等；交代制として、次の勤務時間の組み合わせによる[１週間単位]"] === "1") workTimeSystem = "変形1週間";
+    else workTimeSystem = "変形1カ月";
+  } else if (isFlex) {
+    workTimeSystem = "フレックス";
+  } else if (isMinarai) {
+    workTimeSystem = "みなし事業場外";
+  } else if (isSairyo) {
+    workTimeSystem = "みなし専門型";
+  }
+
   let startTimeStr = "";
   let endTimeStr = "";
   if (isFixed) {
@@ -108,7 +127,6 @@ function mapRow(raw: Record<string, string>): ParsedRow | null {
     startTimeStr = raw["①始業時刻"] || "";
     endTimeStr = raw["①終業時刻"] || "";
   } else {
-    // フレックス等: どこかに入っている時刻を探す
     startTimeStr = raw["始業時刻"] || raw["①始業時刻"] || "";
     endTimeStr = raw["終業時刻"] || raw["①終業時刻"] || "";
   }
@@ -194,6 +212,7 @@ function mapRow(raw: Record<string, string>): ParsedRow | null {
     endHour: endTime.hour,
     endMinute: endTime.minute,
     weeklyHours,
+    workTimeSystem,
     salaryType,
     basicSalary: basicSalaryVal,
     hourlyWage: hourlyWageVal,
@@ -294,6 +313,10 @@ export default function CsvImport({ user, company, onClose, onDone }: Props) {
           contractEndMonth: endDate.month,
           contractEndDay: endDate.day,
           renewalType: row.renewalType,
+          renewalLimitType: "無",
+          renewalLimitCount: 0,
+          renewalLimitYears: 0,
+          conditionChangeType: "無",
           trialPeriodMonths: 0,
           workplaceInitial: row.workplace || company?.address || "",
           workplaceRange: "会社の定める事業所",
@@ -304,6 +327,7 @@ export default function CsvImport({ user, company, onClose, onDone }: Props) {
           endHour: row.endHour,
           endMinute: row.endMinute,
           weeklyHours: row.weeklyHours,
+          workTimeSystem: row.workTimeSystem,
           weeklyDays: 5,
           sideJobPolicy: "届出制",
           teleworkAllowed: false,

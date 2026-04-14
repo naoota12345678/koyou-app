@@ -218,8 +218,24 @@ export default function ContractPreview({ contract, employee, company, onClose }
                 <td style={thStyle}>始業・終業<br />の時刻及び<br />休憩時間</td>
                 <td style={tdStyle}>
                   <div>１　始業・終業の時刻：（始業）{contract.startHour}時{contract.startMinute}分～（終業）{contract.endHour}時{contract.endMinute}分</div>
-                  <div>※1カ月単位の変形労働時間制をとるため、上記時間内で週平均{contract.weeklyHours || 40}時間にシフト調整を行なう（シフト表を参照）。</div>
-                  <div>※業務の繁閑に合わせて始業・終業の時刻を繰り上げ又は繰り下げる場合がある。</div>
+                  {contract.workTimeSystem && contract.workTimeSystem !== "固定" && (() => {
+                    const labels: Record<string, string> = {
+                      "変形1カ月": "1カ月単位の変形労働時間制",
+                      "変形1年": "1年単位の変形労働時間制",
+                      "変形1週間": "1週間単位の変形労働時間制",
+                      "フレックス": "フレックスタイム制",
+                      "みなし事業場外": "事業場外みなし労働時間制",
+                      "みなし専門型": "専門業務型裁量労働制",
+                      "みなし企画業務型": "企画業務型裁量労働制",
+                    };
+                    const label = labels[contract.workTimeSystem] || contract.workTimeSystem;
+                    return (
+                      <>
+                        <div>※{label}をとるため、上記時間内で週平均{contract.weeklyHours || 40}時間にシフト調整を行なう（シフト表を参照）。</div>
+                        <div>※業務の繁閑に合わせて始業・終業の時刻を繰り上げ又は繰り下げる場合がある。</div>
+                      </>
+                    );
+                  })()}
                   <div style={{ marginTop: 4 }}>２　休憩時間：労働時間6時間以上の場合45分、労働時間8時間以上の場合60分</div>
                 </td>
               </tr>

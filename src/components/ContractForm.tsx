@@ -38,6 +38,7 @@ type ContractFormData = {
   endMinute: string;
   weeklyHours: number;
   weeklyDays: number;
+  workTimeSystem: string;
   sideJobPolicy: string;
   teleworkAllowed: boolean;
   salaryType: string;
@@ -120,6 +121,7 @@ export default function ContractForm({ user, employee, company, department, allE
       endMinute: prev?.endMinute || department?.endMinute || company?.defaultEndMinute || "00",
       weeklyHours: prev?.weeklyHours || company?.defaultWeeklyHours || 40,
       weeklyDays: prev?.weeklyDays || 5,
+      workTimeSystem: prev?.workTimeSystem || "固定",
       sideJobPolicy: prev?.sideJobPolicy || "届出制",
       teleworkAllowed: prev?.teleworkAllowed ?? false,
       salaryType: prev?.salaryType || "monthly",
@@ -210,6 +212,7 @@ export default function ContractForm({ user, employee, company, department, allE
       endMinute: form.endMinute,
       weeklyHours: form.weeklyHours,
       weeklyDays: form.weeklyDays,
+      workTimeSystem: form.workTimeSystem,
       sideJobPolicy: form.sideJobPolicy,
       teleworkAllowed: form.teleworkAllowed,
       salaryType: form.salaryType,
@@ -425,6 +428,16 @@ export default function ContractForm({ user, employee, company, department, allE
                 <SmallInput value={form.endMinute} onChange={(v) => f("endMinute", v)} width={50} />
               </div>
             </div>
+            <SelectField label="労働時間制度" value={form.workTimeSystem} onChange={(v) => f("workTimeSystem", v)} options={[
+              { value: "固定", label: "固定（記載なし）" },
+              { value: "変形1カ月", label: "変形労働時間制（1カ月単位）" },
+              { value: "変形1年", label: "変形労働時間制（1年単位）" },
+              { value: "変形1週間", label: "変形労働時間制（1週間単位）" },
+              { value: "フレックス", label: "フレックスタイム制" },
+              { value: "みなし事業場外", label: "みなし労働（事業場外）" },
+              { value: "みなし専門型", label: "みなし労働（専門型裁量）" },
+              { value: "みなし企画業務型", label: "みなし労働（企画業務型）" },
+            ]} />
             <div style={{ display: "flex", gap: 16 }}>
               <FormField label="週所定労働時間" value={String(form.weeklyHours)} onChange={(v) => f("weeklyHours", Number(v) || 0)} type="number" />
               <FormField label="週所定労働日数" value={String(form.weeklyDays)} onChange={(v) => f("weeklyDays", Number(v) || 0)} type="number" />
