@@ -259,13 +259,19 @@ export default function ContractPreview({ contract, employee, company, onClose }
                     {contract.salaryType === "monthly" && <>基本給（<span style={markStyle}>{contract.basicSalary?.toLocaleString()}</span>円）</>}
                     {contract.salaryType === "hourly" && <>時給（<span style={markStyle}>{contract.hourlyWage?.toLocaleString()}</span>円）</>}
                   </div>
+                  {(contract.fixedOvertimeAmount || contract.commuteAllowance) && (
                   <div style={{ marginTop: 4 }}>２　諸手当：</div>
+                  )}
+                  {contract.fixedOvertimeAmount > 0 && (
                   <div>
-                    イ　固定残業手当({contract.fixedOvertimeAmount ? <span style={markStyle}>{contract.fixedOvertimeAmount.toLocaleString()}</span> : "　　　　"}円／月：みなし残業代として月{contract.fixedOvertimeHours || "　"}時間分を固定支給する。)
+                    イ　固定残業手当（<span style={markStyle}>{contract.fixedOvertimeAmount.toLocaleString()}</span>円／月：みなし残業代として月{contract.fixedOvertimeHours || "　"}時間分を固定支給する。）
                   </div>
+                  )}
+                  {contract.commuteAllowance > 0 && (
                   <div>
-                    ロ　通勤手当（{contract.commuteAllowance ? <span style={markStyle}>{contract.commuteAllowance.toLocaleString()}</span> : "　　　　　"}円／{contract.commuteAllowanceType === "daily" ? "日" : "月"}　{contract.commuteAllowanceMax ? <>上限<span style={markStyle}>{contract.commuteAllowanceMax.toLocaleString()}</span>円／月</> : "上限　　円／月"}　）
+                    {contract.fixedOvertimeAmount > 0 ? "ロ" : "イ"}　通勤手当（<span style={markStyle}>{contract.commuteAllowance.toLocaleString()}</span>円／{contract.commuteAllowanceType === "daily" ? "日" : "月"}{contract.commuteAllowanceMax ? <>　上限<span style={markStyle}>{contract.commuteAllowanceMax.toLocaleString()}</span>円／月</> : ""}　）
                   </div>
+                  )}
                   {contract.salaryType !== "hourly" && (
                   <div style={{ marginTop: 4 }}>
                     総支給額　<span style={markStyle}>{contract.totalSalary?.toLocaleString() || 0}</span>円
@@ -302,18 +308,26 @@ export default function ContractPreview({ contract, employee, company, onClose }
                       <span style={markStyle}>イ　厚生年金</span>、　<span style={markStyle}>ロ　健康保険</span>
                       {contract.pensionFund && <span>、　<span style={markStyle}>ハ　厚生年金基金</span></span>}
                     </>
-                  ) : "非加入"}</div>
+                  ) : <span style={markStyle}>無</span>}</div>
                   <div>・雇用保険の適用：　{yesNo(contract.employmentInsurance)}</div>
                 </td>
               </tr>
 
               {/* 備考 */}
-              <tr>
-                <td style={thStyle}>備考</td>
-                <td style={tdStyle}>
-                  {contract.remarks || ""}
-                </td>
-              </tr>
+              {(() => {
+                const filtered = (contract.remarks || "")
+                  .replace(/上記時間内で[^。]*。/g, "")
+                  .replace(/業務の繁閑に合わせて[^。]*。/g, "")
+                  .replace(/休憩時間は[^。]*。/g, "")
+                  .replace(/シフト表を参照[^。]*。?/g, "")
+                  .trim();
+                return filtered ? (
+                  <tr>
+                    <td style={thStyle}>備考</td>
+                    <td style={tdStyle}>{filtered}</td>
+                  </tr>
+                ) : null;
+              })()}
 
               {/* 就業規則 */}
               <tr>
@@ -336,7 +350,7 @@ export default function ContractPreview({ contract, employee, company, onClose }
               </div>
             </>
           ) : (
-            <div style={{ marginTop: 32, fontSize: 13, textAlign: "center" }}>
+            <div style={{ marginTop: 32, fontSize: 13, textAlign: "right" }}>
               令和{contract.issueDateYear}年{contract.issueDateMonth}月{contract.issueDateDay}日
             </div>
           )}
