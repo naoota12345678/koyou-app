@@ -231,8 +231,10 @@ export default function ContractPreview({ contract, employee, company, onClose }
                       );
                     }
                     if (sys === "固定") {
+                      const hDisp = contract.weeklyHoursMax ? `${contract.weeklyHours || 40}〜${contract.weeklyHoursMax}` : String(contract.weeklyHours || 40);
+                      const dDisp = contract.weeklyDaysMax ? `${contract.weeklyDays || 5}〜${contract.weeklyDaysMax}` : String(contract.weeklyDays || 5);
                       return (
-                        <div>※上記時間内で週平均{contract.weeklyHours || 40}時間に調整を行なう</div>
+                        <div>※上記時間内で週所定労働時間数平均{hDisp}時間・週所定労働日数{dDisp}日に調整を行なう</div>
                       );
                     }
                     if (sys) {
@@ -244,8 +246,10 @@ export default function ContractPreview({ contract, employee, company, onClose }
                         "みなし事業場外": "事業場外みなし労働時間制",
                       };
                       const label = labels[sys] || sys;
+                      const hDisp2 = contract.weeklyHoursMax ? `${contract.weeklyHours || 40}〜${contract.weeklyHoursMax}` : String(contract.weeklyHours || 40);
+                      const dDisp2 = contract.weeklyDaysMax ? `${contract.weeklyDays || 5}〜${contract.weeklyDaysMax}` : String(contract.weeklyDays || 5);
                       return (
-                        <div>※{label}をとるため、上記時間内で週平均{contract.weeklyHours || 40}時間にシフト調整を行なう（シフト表を参照）。</div>
+                        <div>※{label}をとるため、上記時間内で週所定労働時間数平均{hDisp2}時間・週所定労働日数{dDisp2}日にシフト調整を行なう（シフト表を参照）。</div>
                       );
                     }
                     return null;
@@ -347,10 +351,30 @@ export default function ContractPreview({ contract, employee, company, onClose }
               </tr>
 
               {/* 備考 */}
-              {contract.remarks && (
+              {(contract.remarks || contract.dependentCertNote) && (
                 <tr>
                   <td style={thStyle}>備考</td>
-                  <td style={tdStyle}>{contract.remarks}</td>
+                  <td style={tdStyle}>
+                    {contract.remarks && <div>{contract.remarks}</div>}
+                    {contract.dependentCertNote && (() => {
+                      const hourly = contract.hourlyWage || 0;
+                      const hours = contract.weeklyHours || 0;
+                      const commuteYear = contract.commuteAllowanceType === "daily"
+                        ? (contract.commuteAllowance || 0) * (contract.weeklyDays || 5) * 52
+                        : (contract.commuteAllowance || 0) * 12;
+                      const annualIncome = hourly * hours * 52 + commuteYear;
+                      return (
+                        <div style={{ marginTop: contract.remarks ? 8 : 0 }}>
+                          <div style={{ fontWeight: 600 }}>【被扶養者認定に関する補足】</div>
+                          <div>本契約における年間収入の見込みは、基本給および諸手当（通勤手当含む）に基づき、基準額（130万円/150万円）未満となるよう設定している。</div>
+                          <div>突発的な業務対応により実際の支給額が一時的に基準額を超過する場合があるが、それは本契約の範囲外の臨時的な増減である。</div>
+                          {contract.salaryType === "hourly" && (
+                            <div style={{ marginTop: 4 }}>※ 年間収入見込み額（概算）：{annualIncome.toLocaleString()}円（時給 {hourly.toLocaleString()}円 × 週 {hours}時間 × 52週 ＋ 通勤手当 年 {commuteYear.toLocaleString()}円）</div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </td>
                 </tr>
               )}
 

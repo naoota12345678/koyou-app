@@ -37,7 +37,10 @@ type ContractFormData = {
   endHour: string;
   endMinute: string;
   weeklyHours: number;
+  weeklyHoursMax: number;
   weeklyDays: number;
+  weeklyDaysMax: number;
+  dependentCertNote: boolean;
   workTimeSystem: string;
   hasFlexibleSchedule: boolean;
   breakTimeType: string;
@@ -125,7 +128,10 @@ export default function ContractForm({ user, employee, company, department, allE
       endHour: prev?.endHour || department?.endHour || company?.defaultEndHour || "18",
       endMinute: prev?.endMinute || department?.endMinute || company?.defaultEndMinute || "00",
       weeklyHours: prev?.weeklyHours || company?.defaultWeeklyHours || 40,
+      weeklyHoursMax: prev?.weeklyHoursMax || 0,
       weeklyDays: prev?.weeklyDays || 5,
+      weeklyDaysMax: prev?.weeklyDaysMax || 0,
+      dependentCertNote: prev?.dependentCertNote ?? false,
       workTimeSystem: prev?.workTimeSystem || "固定",
       hasFlexibleSchedule: prev?.hasFlexibleSchedule ?? false,
       breakTimeType: prev?.breakTimeType || "法定",
@@ -221,7 +227,10 @@ export default function ContractForm({ user, employee, company, department, allE
       endHour: form.endHour,
       endMinute: form.endMinute,
       weeklyHours: form.weeklyHours,
+      weeklyHoursMax: form.weeklyHoursMax,
       weeklyDays: form.weeklyDays,
+      weeklyDaysMax: form.weeklyDaysMax,
+      dependentCertNote: form.dependentCertNote,
       workTimeSystem: form.workTimeSystem,
       hasFlexibleSchedule: form.hasFlexibleSchedule,
       breakTimeType: form.breakTimeType,
@@ -454,9 +463,15 @@ export default function ContractForm({ user, employee, company, department, allE
               { value: "みなし企画業務型", label: "みなし労働（企画業務型）" },
             ]} />
             <CheckField label="始業・終業の繰り上げ・繰り下げあり" checked={form.hasFlexibleSchedule} onChange={(v) => f("hasFlexibleSchedule", v)} />
-            <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ display: "flex", gap: 16, alignItems: "flex-end" }}>
               <FormField label="週所定労働時間" value={String(form.weeklyHours)} onChange={(v) => f("weeklyHours", Number(v) || 0)} type="number" />
+              <span style={{ fontSize: 13, paddingBottom: 8 }}>〜</span>
+              <FormField label="上限（0で範囲なし）" value={String(form.weeklyHoursMax)} onChange={(v) => f("weeklyHoursMax", Number(v) || 0)} type="number" />
+            </div>
+            <div style={{ display: "flex", gap: 16, alignItems: "flex-end" }}>
               <FormField label="週所定労働日数" value={String(form.weeklyDays)} onChange={(v) => f("weeklyDays", Number(v) || 0)} type="number" />
+              <span style={{ fontSize: 13, paddingBottom: 8 }}>〜</span>
+              <FormField label="上限（0で範囲なし）" value={String(form.weeklyDaysMax)} onChange={(v) => f("weeklyDaysMax", Number(v) || 0)} type="number" />
             </div>
             <RadioGroup label="休憩時間" value={form.breakTimeType} onChange={(v) => f("breakTimeType", v)} options={[
               { value: "法定", label: "法定通り（6h超→45分、8h超→60分）" }, { value: "カスタム", label: "自由記載" },
@@ -536,6 +551,15 @@ export default function ContractForm({ user, employee, company, department, allE
                 </div>
               )}
             </div>
+            <CheckField label="被扶養者認定に関する補足を備考に追記" checked={form.dependentCertNote} onChange={(v) => f("dependentCertNote", v)} />
+            {form.dependentCertNote && (
+              <div style={{ padding: "8px 12px", background: "#fffbe6", borderRadius: 6, fontSize: 12, color: "#555", lineHeight: 1.6 }}>
+                <div style={{ fontWeight: 600, marginBottom: 4 }}>備考に以下が自動追記されます：</div>
+                <div>【被扶養者認定に関する補足】</div>
+                <div>本契約における年間収入の見込みは…基準額未満となるよう設定している。</div>
+                <div>※ 年間収入見込み額（概算）が自動計算されます</div>
+              </div>
+            )}
             <FormField label="備考" value={form.remarks} onChange={(v) => f("remarks", v)} />
           </div>
         )}
@@ -552,7 +576,7 @@ export default function ContractForm({ user, employee, company, department, allE
             <ConfirmRow label="就業場所" value={form.workplaceInitial} />
             <ConfirmRow label="業務内容" value={form.jobContentInitial} />
             <ConfirmRow label="勤務時間" value={`${form.startHour}:${form.startMinute}〜${form.endHour}:${form.endMinute}`} />
-            <ConfirmRow label="週所定労働" value={`${form.weeklyHours}時間 / ${form.weeklyDays}日`} />
+            <ConfirmRow label="週所定労働" value={`${form.weeklyHours}${form.weeklyHoursMax ? `〜${form.weeklyHoursMax}` : ""}時間 / ${form.weeklyDays}${form.weeklyDaysMax ? `〜${form.weeklyDaysMax}` : ""}日`} />
             <ConfirmRow label="賃金" value={form.salaryType === "monthly" ? `月給 ${form.basicSalary.toLocaleString()}円` : `時給 ${form.hourlyWage.toLocaleString()}円`} />
             <ConfirmRow label="総支給額" value={`${form.totalSalary.toLocaleString()}円`} />
             <ConfirmRow label="社会保険" value={finalSocial ? "加入" : "非加入"} color={finalSocial ? C.green : C.red} />

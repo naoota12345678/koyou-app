@@ -89,7 +89,10 @@ export type Contract = {
   endHour: string;
   endMinute: string;
   weeklyHours: number;
+  weeklyHoursMax: number; // 範囲の上限（0なら範囲なし、例: weeklyHours=20, weeklyHoursMax=25 → "20〜25時間"）
   weeklyDays: number;
+  weeklyDaysMax: number; // 範囲の上限（0なら範囲なし）
+  dependentCertNote: boolean; // 被扶養者認定に関する補足
   workTimeSystem: string; // "固定" | "変形1カ月" | "変形1年" | "変形1週間" | "フレックス" | "みなし事業場外" | "みなし専門型" | "みなし企画業務型"
   hasFlexibleSchedule: boolean; // 繰り上げ繰り下げの有無
   breakTimeType: string; // "法定" | "カスタム"
