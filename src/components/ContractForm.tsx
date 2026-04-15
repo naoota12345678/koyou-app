@@ -40,6 +40,8 @@ type ContractFormData = {
   weeklyDays: number;
   workTimeSystem: string;
   hasFlexibleSchedule: boolean;
+  breakTimeType: string;
+  breakTimeCustom: string;
   sideJobPolicy: string;
   teleworkAllowed: boolean;
   salaryType: string;
@@ -126,6 +128,8 @@ export default function ContractForm({ user, employee, company, department, allE
       weeklyDays: prev?.weeklyDays || 5,
       workTimeSystem: prev?.workTimeSystem || "固定",
       hasFlexibleSchedule: prev?.hasFlexibleSchedule ?? false,
+      breakTimeType: prev?.breakTimeType || "法定",
+      breakTimeCustom: prev?.breakTimeCustom || "",
       sideJobPolicy: prev?.sideJobPolicy || "届出制",
       teleworkAllowed: prev?.teleworkAllowed ?? false,
       salaryType: prev?.salaryType || "monthly",
@@ -220,6 +224,8 @@ export default function ContractForm({ user, employee, company, department, allE
       weeklyDays: form.weeklyDays,
       workTimeSystem: form.workTimeSystem,
       hasFlexibleSchedule: form.hasFlexibleSchedule,
+      breakTimeType: form.breakTimeType,
+      breakTimeCustom: form.breakTimeCustom,
       sideJobPolicy: form.sideJobPolicy,
       teleworkAllowed: form.teleworkAllowed,
       salaryType: form.salaryType,
@@ -438,7 +444,7 @@ export default function ContractForm({ user, employee, company, department, allE
               </div>
             </div>
             <SelectField label="労働時間制度" value={form.workTimeSystem} onChange={(v) => f("workTimeSystem", v)} options={[
-              { value: "固定", label: "固定（記載なし）" },
+              { value: "固定", label: "固定" },
               { value: "変形1カ月", label: "変形労働時間制（1カ月単位）" },
               { value: "変形1年", label: "変形労働時間制（1年単位）" },
               { value: "変形1週間", label: "変形労働時間制（1週間単位）" },
@@ -452,6 +458,12 @@ export default function ContractForm({ user, employee, company, department, allE
               <FormField label="週所定労働時間" value={String(form.weeklyHours)} onChange={(v) => f("weeklyHours", Number(v) || 0)} type="number" />
               <FormField label="週所定労働日数" value={String(form.weeklyDays)} onChange={(v) => f("weeklyDays", Number(v) || 0)} type="number" />
             </div>
+            <RadioGroup label="休憩時間" value={form.breakTimeType} onChange={(v) => f("breakTimeType", v)} options={[
+              { value: "法定", label: "法定通り（6h超→45分、8h超→60分）" }, { value: "カスタム", label: "自由記載" },
+            ]} />
+            {form.breakTimeType === "カスタム" && (
+              <FormField label="休憩時間（自由記載）" value={form.breakTimeCustom} onChange={(v) => f("breakTimeCustom", v)} placeholder="例：90分" />
+            )}
             <RadioGroup label="副業" value={form.sideJobPolicy} onChange={(v) => f("sideJobPolicy", v)} options={[
               { value: "禁止", label: "禁止" }, { value: "許可", label: "許可" }, { value: "届出制", label: "届出制" },
             ]} />
