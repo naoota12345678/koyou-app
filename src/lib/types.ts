@@ -11,6 +11,7 @@ export type Company = {
   defaultEndHour: string;
   defaultEndMinute: string;
   defaultWeeklyHours: number;
+  defaultWeeklyDays: number;
   payClosingDay: string;
   paymentDay: string;
   incrementDefault: boolean;

@@ -62,7 +62,7 @@ function DashboardContent() {
   const [companyForm, setCompanyForm] = useState({
     name: "", address: "", representative: "", phone: "",
     defaultStartHour: "9", defaultStartMinute: "00", defaultEndHour: "18", defaultEndMinute: "00",
-    defaultWeeklyHours: 40, payClosingDay: "末日", paymentDay: "翌月25日",
+    defaultWeeklyHours: 40, defaultWeeklyDays: 5, payClosingDay: "末日", paymentDay: "翌月25日",
     incrementDefault: true, bonusDefault: true, retirementAllowanceDefault: false,
     retirementAllowanceDetail: "", workRulesLocation: "事務所内掲示",
   });
@@ -164,6 +164,7 @@ function DashboardContent() {
       defaultStartHour: company?.defaultStartHour || "9", defaultStartMinute: company?.defaultStartMinute || "00",
       defaultEndHour: company?.defaultEndHour || "18", defaultEndMinute: company?.defaultEndMinute || "00",
       defaultWeeklyHours: company?.defaultWeeklyHours || 40,
+      defaultWeeklyDays: company?.defaultWeeklyDays || 5,
       payClosingDay: company?.payClosingDay || "末日", paymentDay: company?.paymentDay || "翌月25日",
       incrementDefault: company?.incrementDefault ?? true, bonusDefault: company?.bonusDefault ?? true,
       retirementAllowanceDefault: company?.retirementAllowanceDefault ?? false,
@@ -456,6 +457,8 @@ function DashboardContent() {
                     </div>
                   </div>
                   <FormField label="週所定労働時間" value={String(companyForm.defaultWeeklyHours)} onChange={(v) => setCompanyForm({ ...companyForm, defaultWeeklyHours: Number(v) || 0 })} type="number" />
+                  <FormField label="週所定労働日数" value={String(companyForm.defaultWeeklyDays)} onChange={(v) => setCompanyForm({ ...companyForm, defaultWeeklyDays: Math.min(Math.max(Number(v) || 0, 1), 7) })} type="number" />
+                  <div style={{ fontSize: 11, color: C.gray, marginTop: -6 }}>※ 休日数は「7 − 労働日数」で自動計算されます（現在: 週{Math.max(7 - (companyForm.defaultWeeklyDays || 5), 0)}日休み）</div>
                   <div style={{ display: "flex", gap: 16 }}>
                     <FormField label="賃金締切日" value={companyForm.payClosingDay} onChange={(v) => setCompanyForm({ ...companyForm, payClosingDay: v })} />
                     <FormField label="支払日" value={companyForm.paymentDay} onChange={(v) => setCompanyForm({ ...companyForm, paymentDay: v })} />
@@ -490,6 +493,7 @@ function DashboardContent() {
                       { label: "電話番号", value: company.phone },
                       { label: "勤務時間", value: `${company.defaultStartHour || "9"}:${company.defaultStartMinute || "00"} 〜 ${company.defaultEndHour || "18"}:${company.defaultEndMinute || "00"}` },
                       { label: "週所定労働時間", value: `${company.defaultWeeklyHours || 40}時間` },
+                      { label: "週所定労働日数", value: `${company.defaultWeeklyDays || 5}日（休日: 週${Math.max(7 - (company.defaultWeeklyDays || 5), 0)}日）` },
                       { label: "賃金締切日", value: company.payClosingDay },
                       { label: "支払日", value: company.paymentDay },
                       { label: "昇給", value: company.incrementDefault ? "あり" : "なし" },

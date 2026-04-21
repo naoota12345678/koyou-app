@@ -129,7 +129,7 @@ export default function ContractForm({ user, employee, company, department, allE
       endMinute: prev?.endMinute || department?.endMinute || company?.defaultEndMinute || "00",
       weeklyHours: prev?.weeklyHours || company?.defaultWeeklyHours || 40,
       weeklyHoursMax: prev?.weeklyHoursMax || 0,
-      weeklyDays: prev?.weeklyDays || 5,
+      weeklyDays: prev?.weeklyDays || company?.defaultWeeklyDays || 5,
       weeklyDaysMax: prev?.weeklyDaysMax || 0,
       dependentCertNote: prev?.dependentCertNote ?? false,
       workTimeSystem: prev?.workTimeSystem || "固定",
