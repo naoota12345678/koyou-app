@@ -41,6 +41,9 @@ type ContractFormData = {
   weeklyDays: number;
   weeklyDaysMax: number;
   dependentCertNote: boolean;
+  holidayType: string;
+  holidayFixedDays: string[];
+  holidayNote: string;
   workTimeSystem: string;
   hasFlexibleSchedule: boolean;
   breakTimeType: string;
@@ -132,6 +135,9 @@ export default function ContractForm({ user, employee, company, department, allE
       weeklyDays: prev?.weeklyDays || company?.defaultWeeklyDays || 5,
       weeklyDaysMax: prev?.weeklyDaysMax || 0,
       dependentCertNote: prev?.dependentCertNote ?? false,
+      holidayType: prev?.holidayType || "シフト",
+      holidayFixedDays: prev?.holidayFixedDays || [],
+      holidayNote: prev?.holidayNote || "",
       workTimeSystem: prev?.workTimeSystem || "固定",
       hasFlexibleSchedule: prev?.hasFlexibleSchedule ?? false,
       breakTimeType: prev?.breakTimeType || "法定",
@@ -473,6 +479,22 @@ export default function ContractForm({ user, employee, company, department, allE
               <span style={{ fontSize: 13, paddingBottom: 8 }}>〜</span>
               <FormField label="上限（0で範囲なし）" value={String(form.weeklyDaysMax)} onChange={(v) => f("weeklyDaysMax", Number(v) || 0)} type="number" />
             </div>
+            <RadioGroup label="休日" value={form.holidayType} onChange={(v) => f("holidayType", v)} options={[
+              { value: "シフト", label: "シフトによる休日" }, { value: "固定", label: "固定曜日" }, { value: "自由記載", label: "自由記載" },
+            ]} />
+            {form.holidayType === "固定" && (
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {["月", "火", "水", "木", "金", "土", "日"].map((d) => (
+                  <CheckField key={d} label={d} checked={form.holidayFixedDays.includes(d)} onChange={(v) => {
+                    const days = v ? [...form.holidayFixedDays, d] : form.holidayFixedDays.filter((x) => x !== d);
+                    f("holidayFixedDays", days);
+                  }} />
+                ))}
+              </div>
+            )}
+            {form.holidayType === "自由記載" && (
+              <FormField label="休日（自由記載）" value={form.holidayNote} onChange={(v) => f("holidayNote", v)} placeholder="例：毎週水曜日、第2・第4土曜日" />
+            )}
             <RadioGroup label="休憩時間" value={form.breakTimeType} onChange={(v) => f("breakTimeType", v)} options={[
               { value: "法定", label: "法定通り（6h超→45分、8h超→60分）" }, { value: "カスタム", label: "自由記載" },
             ]} />
@@ -577,6 +599,7 @@ export default function ContractForm({ user, employee, company, department, allE
             <ConfirmRow label="業務内容" value={form.jobContentInitial} />
             <ConfirmRow label="勤務時間" value={`${form.startHour}:${form.startMinute}〜${form.endHour}:${form.endMinute}`} />
             <ConfirmRow label="週所定労働" value={`${form.weeklyHours}${form.weeklyHoursMax ? `〜${form.weeklyHoursMax}` : ""}時間 / ${form.weeklyDays}${form.weeklyDaysMax ? `〜${form.weeklyDaysMax}` : ""}日`} />
+            <ConfirmRow label="休日" value={form.holidayType === "固定" ? `毎週${form.holidayFixedDays.join("・")}曜日` : form.holidayType === "自由記載" ? form.holidayNote : "シフトによる休日"} />
             <ConfirmRow label="賃金" value={form.salaryType === "monthly" ? `月給 ${form.basicSalary.toLocaleString()}円` : `時給 ${form.hourlyWage.toLocaleString()}円`} />
             <ConfirmRow label="総支給額" value={`${form.totalSalary.toLocaleString()}円`} />
             <ConfirmRow label="社会保険" value={finalSocial ? "加入" : "非加入"} color={finalSocial ? C.green : C.red} />

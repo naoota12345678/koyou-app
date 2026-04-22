@@ -274,7 +274,15 @@ export default function ContractPreview({ contract, employee, company, onClose }
               <tr>
                 <td style={thStyle}>休日</td>
                 <td style={tdStyle}>
-                  定例日：シフトによる休日(週{contract.weeklyDays ? Math.max(7 - contract.weeklyDays, 1) : 1}日以上)
+                  {(!contract.holidayType || contract.holidayType === "シフト") && (
+                    <>定例日：シフトによる休日(週{contract.weeklyDaysMax ? Math.max(7 - contract.weeklyDaysMax, 1) : contract.weeklyDays ? Math.max(7 - contract.weeklyDays, 1) : 1}日以上)</>
+                  )}
+                  {contract.holidayType === "固定" && (
+                    <>定例日：毎週{contract.holidayFixedDays?.length ? contract.holidayFixedDays.join("・") + "曜日" : "（未設定）"}</>
+                  )}
+                  {contract.holidayType === "自由記載" && (
+                    <>{contract.holidayNote || "（未入力）"}</>
+                  )}
                 </td>
               </tr>
 

@@ -94,6 +94,9 @@ export type Contract = {
   weeklyDays: number;
   weeklyDaysMax: number; // 範囲の上限（0なら範囲なし）
   dependentCertNote: boolean; // 被扶養者認定に関する補足
+  holidayType: string; // "シフト" | "固定" | "自由記載"
+  holidayFixedDays: string[]; // 固定休の曜日（例: ["水", "日"]）
+  holidayNote: string; // 自由記載の休日説明
   workTimeSystem: string; // "固定" | "変形1カ月" | "変形1年" | "変形1週間" | "フレックス" | "みなし事業場外" | "みなし専門型" | "みなし企画業務型"
   hasFlexibleSchedule: boolean; // 繰り上げ繰り下げの有無
   breakTimeType: string; // "法定" | "カスタム"
