@@ -14,6 +14,7 @@ import { documentTypeLabel } from "@/lib/insurance";
 import { FormField, SmallInput, CheckField, SelectField } from "@/components/FormParts";
 import ContractForm from "@/components/ContractForm";
 import ContractPreview from "@/components/ContractPreview";
+import WorkerRoster from "@/components/WorkerRoster";
 import CsvImport from "@/components/CsvImport";
 import { calcAlerts, Alert } from "@/lib/alerts";
 
@@ -44,13 +45,19 @@ function DashboardContent() {
   const [editContract, setEditContract] = useState<Contract | null>(null);
   const [previewContract, setPreviewContract] = useState<Contract | null>(null);
   const [autoPdf, setAutoPdf] = useState(false);
+  const [showRoster, setShowRoster] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [filterDept, setFilterDept] = useState("");
   const [filterStatus, setFilterStatus] = useState("active");
 
   // 従業員編集
   const [editingEmployee, setEditingEmployee] = useState(false);
-  const [editEmpForm, setEditEmpForm] = useState({ name: "", employeeNumber: "", email: "", departmentId: "" });
+  const [editEmpForm, setEditEmpForm] = useState({
+    name: "", employeeNumber: "", email: "", departmentId: "",
+    furigana: "", gender: "", birthYear: "", birthMonth: "", birthDay: "",
+    address: "", hireYear: "", hireMonth: "", hireDay: "",
+    jobContent: "", history: "",
+  });
 
   // CSVインポート
   const [showCsvImport, setShowCsvImport] = useState(false);
@@ -203,11 +210,14 @@ function DashboardContent() {
     if (!user || !empForm.name) { alert("氏名は必須です"); return; }
     const ref = await addDoc(collection(db, "employees"), {
       userId: user.uid, name: empForm.name, employeeNumber: empForm.employeeNumber,
-      address: "", email: empForm.email, departmentId: empForm.departmentId, status: "active",
+      furigana: "", gender: "", birthYear: "", birthMonth: "", birthDay: "",
+      address: "", email: empForm.email, departmentId: empForm.departmentId,
+      hireYear: "", hireMonth: "", hireDay: "", jobContent: "", history: "",
+      status: "active",
       createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
     });
     setShowEmpForm(false);
-    const newEmp: Employee = { id: ref.id, userId: user.uid, name: empForm.name, employeeNumber: empForm.employeeNumber, address: "", email: empForm.email, departmentId: empForm.departmentId, status: "active", retiredAt: null, retirementReason: "", retirementRemarks: "", createdAt: null, updatedAt: null };
+    const newEmp: Employee = { id: ref.id, userId: user.uid, name: empForm.name, employeeNumber: empForm.employeeNumber, furigana: "", gender: "", birthYear: "", birthMonth: "", birthDay: "", address: "", email: empForm.email, departmentId: empForm.departmentId, hireYear: "", hireMonth: "", hireDay: "", jobContent: "", history: "", status: "active", retiredAt: null, retirementReason: "", retirementRemarks: "", createdAt: null, updatedAt: null };
     setEmpForm({ name: "", employeeNumber: "", email: "", departmentId: "" });
     setSelectedEmployee(newEmp);
     setPage("employees");
@@ -223,6 +233,17 @@ function DashboardContent() {
       employeeNumber: selectedEmployee.employeeNumber || "",
       email: selectedEmployee.email || "",
       departmentId: selectedEmployee.departmentId || "",
+      furigana: selectedEmployee.furigana || "",
+      gender: selectedEmployee.gender || "",
+      birthYear: selectedEmployee.birthYear || "",
+      birthMonth: selectedEmployee.birthMonth || "",
+      birthDay: selectedEmployee.birthDay || "",
+      address: selectedEmployee.address || "",
+      hireYear: selectedEmployee.hireYear || "",
+      hireMonth: selectedEmployee.hireMonth || "",
+      hireDay: selectedEmployee.hireDay || "",
+      jobContent: selectedEmployee.jobContent || "",
+      history: selectedEmployee.history || "",
     });
     setEditingEmployee(true);
   };
@@ -231,6 +252,11 @@ function DashboardContent() {
     await updateDoc(doc(db, "employees", selectedEmployee.id), {
       name: editEmpForm.name, employeeNumber: editEmpForm.employeeNumber,
       email: editEmpForm.email, departmentId: editEmpForm.departmentId,
+      furigana: editEmpForm.furigana, gender: editEmpForm.gender,
+      birthYear: editEmpForm.birthYear, birthMonth: editEmpForm.birthMonth, birthDay: editEmpForm.birthDay,
+      address: editEmpForm.address,
+      hireYear: editEmpForm.hireYear, hireMonth: editEmpForm.hireMonth, hireDay: editEmpForm.hireDay,
+      jobContent: editEmpForm.jobContent, history: editEmpForm.history,
       updatedAt: serverTimestamp(),
     });
     setSelectedEmployee({ ...selectedEmployee, ...editEmpForm });
@@ -651,8 +677,44 @@ function DashboardContent() {
                 <>
                   <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                     <FormField label="氏名 *" value={editEmpForm.name} onChange={(v) => setEditEmpForm({ ...editEmpForm, name: v })} />
+                    <FormField label="ふりがな" value={editEmpForm.furigana} onChange={(v) => setEditEmpForm({ ...editEmpForm, furigana: v })} />
                     <FormField label="従業員番号" value={editEmpForm.employeeNumber} onChange={(v) => setEditEmpForm({ ...editEmpForm, employeeNumber: v })} />
                     <FormField label="メールアドレス" value={editEmpForm.email} onChange={(v) => setEditEmpForm({ ...editEmpForm, email: v })} />
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 4 }}>性別</div>
+                      <div style={{ display: "flex", gap: 12 }}>
+                        {["男", "女"].map((g) => (
+                          <label key={g} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, cursor: "pointer" }}>
+                            <input type="radio" name="gender" checked={editEmpForm.gender === g} onChange={() => setEditEmpForm({ ...editEmpForm, gender: g })} />
+                            {g}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 4 }}>生年月日</div>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <SmallInput value={editEmpForm.birthYear} onChange={(v) => setEditEmpForm({ ...editEmpForm, birthYear: v })} width={70} />
+                        <span style={{ fontSize: 12 }}>年</span>
+                        <SmallInput value={editEmpForm.birthMonth} onChange={(v) => setEditEmpForm({ ...editEmpForm, birthMonth: v })} width={45} />
+                        <span style={{ fontSize: 12 }}>月</span>
+                        <SmallInput value={editEmpForm.birthDay} onChange={(v) => setEditEmpForm({ ...editEmpForm, birthDay: v })} width={45} />
+                        <span style={{ fontSize: 12 }}>日</span>
+                      </div>
+                    </div>
+                    <FormField label="住所" value={editEmpForm.address} onChange={(v) => setEditEmpForm({ ...editEmpForm, address: v })} />
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 4 }}>雇入年月日</div>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <SmallInput value={editEmpForm.hireYear} onChange={(v) => setEditEmpForm({ ...editEmpForm, hireYear: v })} width={70} />
+                        <span style={{ fontSize: 12 }}>年</span>
+                        <SmallInput value={editEmpForm.hireMonth} onChange={(v) => setEditEmpForm({ ...editEmpForm, hireMonth: v })} width={45} />
+                        <span style={{ fontSize: 12 }}>月</span>
+                        <SmallInput value={editEmpForm.hireDay} onChange={(v) => setEditEmpForm({ ...editEmpForm, hireDay: v })} width={45} />
+                        <span style={{ fontSize: 12 }}>日</span>
+                      </div>
+                    </div>
+                    <FormField label="従事する業務の内容" value={editEmpForm.jobContent} onChange={(v) => setEditEmpForm({ ...editEmpForm, jobContent: v })} />
                     {departments.length > 0 && (
                       <div>
                         <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 4 }}>部署</label>
@@ -662,6 +724,10 @@ function DashboardContent() {
                         </select>
                       </div>
                     )}
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 4 }}>履歴（1行ずつ入力）</div>
+                      <textarea value={editEmpForm.history} onChange={(e) => setEditEmpForm({ ...editEmpForm, history: e.target.value })} rows={4} placeholder="例:&#10;令和5年4月 入社&#10;令和6年1月 営業部へ異動" style={{ width: "100%", padding: "8px 12px", border: "1px solid #e8e2da", borderRadius: 6, fontSize: 13, resize: "vertical", boxSizing: "border-box" }} />
+                    </div>
                   </div>
                   <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
                     <button onClick={() => setEditingEmployee(false)} style={{ padding: "8px 16px", fontSize: 13, color: C.gray, background: C.cream, border: "none", borderRadius: 6, cursor: "pointer" }}>キャンセル</button>
@@ -673,8 +739,12 @@ function DashboardContent() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
                       <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>従業員番号</span><div style={{ fontSize: 14 }}>{selectedEmployee.employeeNumber || "未設定"}</div></div>
+                      <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>ふりがな</span><div style={{ fontSize: 14 }}>{selectedEmployee.furigana || "未設定"}</div></div>
+                      <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>性別</span><div style={{ fontSize: 14 }}>{selectedEmployee.gender || "未設定"}</div></div>
                       <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>メール</span><div style={{ fontSize: 14 }}>{selectedEmployee.email || "未設定"}</div></div>
                       {departments.length > 0 && <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>部署</span><div style={{ fontSize: 14 }}>{getDeptName(selectedEmployee.departmentId)}</div></div>}
+                      {selectedEmployee.birthYear && <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>生年月日</span><div style={{ fontSize: 14 }}>{selectedEmployee.birthYear}年{selectedEmployee.birthMonth}月{selectedEmployee.birthDay}日</div></div>}
+                      {selectedEmployee.hireYear && <div><span style={{ fontSize: 11, fontWeight: 600, color: C.gray }}>雇入年月日</span><div style={{ fontSize: 14 }}>{selectedEmployee.hireYear}年{selectedEmployee.hireMonth}月{selectedEmployee.hireDay}日</div></div>}
                     </div>
                     <button onClick={startEditEmployee} style={{ padding: "4px 12px", fontSize: 12, color: C.navy, background: C.pale, border: "none", borderRadius: 4, cursor: "pointer" }}>編集</button>
                   </div>
@@ -689,6 +759,9 @@ function DashboardContent() {
                         </button>
                       </>
                     )}
+                    <button onClick={() => setShowRoster(true)} style={{ padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.navy, background: C.pale, border: "none", borderRadius: 6, cursor: "pointer" }}>
+                      労働者名簿
+                    </button>
                     <button onClick={() => handleDeleteEmployee(selectedEmployee)} style={{ padding: "8px 16px", fontSize: 13, color: C.red, background: "transparent", border: `1px solid ${C.red}`, borderRadius: 6, cursor: "pointer", marginLeft: "auto" }}>
                       削除
                     </button>
@@ -830,6 +903,15 @@ function DashboardContent() {
           company={company}
           autoPdf={autoPdf}
           onClose={() => { setPreviewContract(null); setAutoPdf(false); }}
+        />
+      )}
+
+      {/* 労働者名簿モーダル */}
+      {showRoster && selectedEmployee && (
+        <WorkerRoster
+          employee={selectedEmployee}
+          company={company}
+          onClose={() => setShowRoster(false)}
         />
       )}
 

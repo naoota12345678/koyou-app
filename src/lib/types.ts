@@ -43,8 +43,18 @@ export type Employee = {
   departmentId: string; // 空文字 = 部署なし
   employeeNumber: string;
   name: string;
+  furigana: string;
+  gender: string; // "男" | "女" | ""
+  birthYear: string;
+  birthMonth: string;
+  birthDay: string;
   address: string;
   email: string;
+  hireYear: string;
+  hireMonth: string;
+  hireDay: string;
+  jobContent: string;
+  history: string;
   status: string; // active | leave | retired
   retiredAt: unknown;
   retirementReason: string;
