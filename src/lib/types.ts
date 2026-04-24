@@ -4,6 +4,7 @@ export type Company = {
   name: string;
   address: string;
   representative: string;
+  representativeTitle: string; // "代表取締役" | "代表社員" | "代表"
   phone: string;
   // 労働条件デフォルト
   defaultStartHour: string;
@@ -112,6 +113,7 @@ export type Contract = {
   commuteAllowance: number;
   commuteAllowanceType: string; // "monthly" | "daily"
   commuteAllowanceMax: number;
+  otherAllowances: { name: string; amount: number }[];
   totalSalary: number;
   payClosingDay: string;
   paymentDay: string;

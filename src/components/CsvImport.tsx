@@ -362,6 +362,7 @@ export default function CsvImport({ user, company, onClose, onDone }: Props) {
           commuteAllowance: row.commuteAllowance,
           commuteAllowanceType: row.commuteAllowanceType,
           commuteAllowanceMax: 0,
+          otherAllowances: [],
           totalSalary,
           payClosingDay: row.payClosingDay,
           paymentDay: row.paymentDay,

@@ -11,7 +11,7 @@ import {
 import { db } from "@/lib/firebase";
 import { C, Company, Department, Employee, Contract } from "@/lib/types";
 import { documentTypeLabel } from "@/lib/insurance";
-import { FormField, SmallInput, CheckField } from "@/components/FormParts";
+import { FormField, SmallInput, CheckField, SelectField } from "@/components/FormParts";
 import ContractForm from "@/components/ContractForm";
 import ContractPreview from "@/components/ContractPreview";
 import CsvImport from "@/components/CsvImport";
@@ -43,6 +43,7 @@ function DashboardContent() {
   const [showContractForm, setShowContractForm] = useState(false);
   const [editContract, setEditContract] = useState<Contract | null>(null);
   const [previewContract, setPreviewContract] = useState<Contract | null>(null);
+  const [autoPdf, setAutoPdf] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [filterDept, setFilterDept] = useState("");
   const [filterStatus, setFilterStatus] = useState("active");
@@ -60,7 +61,7 @@ function DashboardContent() {
 
   // 会社情報フォーム
   const [companyForm, setCompanyForm] = useState({
-    name: "", address: "", representative: "", phone: "",
+    name: "", address: "", representative: "", representativeTitle: "代表取締役", phone: "",
     defaultStartHour: "9", defaultStartMinute: "00", defaultEndHour: "18", defaultEndMinute: "00",
     defaultWeeklyHours: 40, defaultWeeklyDays: 5, payClosingDay: "末日", paymentDay: "翌月25日",
     incrementDefault: true, bonusDefault: true, retirementAllowanceDefault: false,
@@ -160,7 +161,7 @@ function DashboardContent() {
   const startEditCompany = () => {
     setCompanyForm({
       name: company?.name || "", address: company?.address || "",
-      representative: company?.representative || "", phone: company?.phone || "",
+      representative: company?.representative || "", representativeTitle: company?.representativeTitle || "代表取締役", phone: company?.phone || "",
       defaultStartHour: company?.defaultStartHour || "9", defaultStartMinute: company?.defaultStartMinute || "00",
       defaultEndHour: company?.defaultEndHour || "18", defaultEndMinute: company?.defaultEndMinute || "00",
       defaultWeeklyHours: company?.defaultWeeklyHours || 40,
@@ -440,7 +441,12 @@ function DashboardContent() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <FormField label="会社名（正式名称） *" value={companyForm.name} onChange={(v) => setCompanyForm({ ...companyForm, name: v })} placeholder="例: 株式会社○○" />
                   <FormField label="所在地" value={companyForm.address} onChange={(v) => setCompanyForm({ ...companyForm, address: v })} placeholder="例: 東京都千代田区..." />
-                  <FormField label="代表取締役名" value={companyForm.representative} onChange={(v) => setCompanyForm({ ...companyForm, representative: v })} />
+                  <SelectField label="代表格" value={companyForm.representativeTitle} onChange={(v) => setCompanyForm({ ...companyForm, representativeTitle: v })} options={[
+                    { value: "代表取締役", label: "代表取締役" },
+                    { value: "代表社員", label: "代表社員" },
+                    { value: "代表", label: "代表" },
+                  ]} />
+                  <FormField label="代表者名" value={companyForm.representative} onChange={(v) => setCompanyForm({ ...companyForm, representative: v })} />
                   <FormField label="電話番号" value={companyForm.phone} onChange={(v) => setCompanyForm({ ...companyForm, phone: v })} />
 
                   <div style={{ borderTop: `1px solid ${C.light}`, paddingTop: 14, marginTop: 4 }}>
@@ -489,7 +495,7 @@ function DashboardContent() {
                     {[
                       { label: "会社名", value: company.name },
                       { label: "所在地", value: company.address },
-                      { label: "代表取締役", value: company.representative },
+                      { label: company.representativeTitle || "代表取締役", value: company.representative },
                       { label: "電話番号", value: company.phone },
                       { label: "勤務時間", value: `${company.defaultStartHour || "9"}:${company.defaultStartMinute || "00"} 〜 ${company.defaultEndHour || "18"}:${company.defaultEndMinute || "00"}` },
                       { label: "週所定労働時間", value: `${company.defaultWeeklyHours || 40}時間` },
@@ -723,7 +729,7 @@ function DashboardContent() {
                           )}
                           <button onClick={(e) => { e.stopPropagation(); setEditContract(c); setShowContractForm(true); }} style={{ padding: "3px 10px", fontSize: 11, color: C.navy, background: C.pale, border: "none", borderRadius: 4, cursor: "pointer" }}>編集</button>
                           <button onClick={(e) => { e.stopPropagation(); setPreviewContract(c); }} style={{ padding: "3px 10px", fontSize: 11, color: C.navy, background: C.pale, border: "none", borderRadius: 4, cursor: "pointer" }}>プレビュー</button>
-                          <button style={{ padding: "3px 10px", fontSize: 11, color: C.navy, background: C.pale, border: "none", borderRadius: 4, cursor: "pointer" }}>PDF</button>
+                          <button onClick={(e) => { e.stopPropagation(); setAutoPdf(true); setPreviewContract(c); }} style={{ padding: "3px 10px", fontSize: 11, color: C.navy, background: C.pale, border: "none", borderRadius: 4, cursor: "pointer" }}>PDF</button>
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: 20, flexWrap: "wrap", fontSize: 12, color: C.gray }}>
@@ -822,7 +828,8 @@ function DashboardContent() {
           contract={previewContract}
           employee={selectedEmployee}
           company={company}
-          onClose={() => setPreviewContract(null)}
+          autoPdf={autoPdf}
+          onClose={() => { setPreviewContract(null); setAutoPdf(false); }}
         />
       )}
 

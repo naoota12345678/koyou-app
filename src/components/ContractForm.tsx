@@ -58,6 +58,7 @@ type ContractFormData = {
   commuteAllowance: number;
   commuteAllowanceType: string; // "monthly" | "daily"
   commuteAllowanceMax: number;
+  otherAllowances: { name: string; amount: number }[];
   totalSalary: number;
   payClosingDay: string;
   paymentDay: string;
@@ -152,6 +153,7 @@ export default function ContractForm({ user, employee, company, department, allE
       commuteAllowance: prev?.commuteAllowance || 0,
       commuteAllowanceType: prev?.commuteAllowanceType || "monthly",
       commuteAllowanceMax: prev?.commuteAllowanceMax || 0,
+      otherAllowances: prev?.otherAllowances || [],
       totalSalary: 0,
       payClosingDay: prev?.payClosingDay || company?.payClosingDay || "末日",
       paymentDay: prev?.paymentDay || company?.paymentDay || "翌月25日",
@@ -176,15 +178,19 @@ export default function ContractForm({ user, employee, company, department, allE
     setForm((p) => ({ ...p, [key]: val }));
 
   // 総支給額の自動計算
+  const otherAllowancesTotal = form.otherAllowances.reduce((sum, a) => sum + (a.amount || 0), 0);
   useEffect(() => {
     let total = 0;
     if (form.salaryType === "monthly") {
-      total = (form.basicSalary || 0) + (form.fixedOvertimeAmount || 0) + (form.commuteAllowance || 0);
+      const commuteMonthly = form.commuteAllowanceType === "daily"
+        ? Math.round((form.commuteAllowance || 0) * (form.weeklyDays || 5) * 52 / 12)
+        : (form.commuteAllowance || 0);
+      total = (form.basicSalary || 0) + (form.fixedOvertimeAmount || 0) + commuteMonthly + otherAllowancesTotal;
     } else {
-      total = (form.hourlyWage || 0) * (form.weeklyHours || 0) * 4 + (form.commuteAllowance || 0);
+      total = (form.hourlyWage || 0) * (form.weeklyHours || 0) * 4 + (form.commuteAllowance || 0) + otherAllowancesTotal;
     }
     f("totalSalary", total);
-  }, [form.basicSalary, form.hourlyWage, form.fixedOvertimeAmount, form.commuteAllowance, form.salaryType, form.weeklyHours]);
+  }, [form.basicSalary, form.hourlyWage, form.fixedOvertimeAmount, form.commuteAllowance, form.commuteAllowanceType, form.weeklyDays, form.salaryType, form.weeklyHours, otherAllowancesTotal]);
 
   // 社保・雇用保険の自動判定
   const isTokutei = calcIsTokutei(allEmployees, allContracts);
@@ -251,6 +257,7 @@ export default function ContractForm({ user, employee, company, department, allE
       commuteAllowance: form.commuteAllowance,
       commuteAllowanceType: form.commuteAllowanceType,
       commuteAllowanceMax: form.commuteAllowanceMax,
+      otherAllowances: form.otherAllowances,
       totalSalary: form.totalSalary,
       payClosingDay: form.payClosingDay,
       paymentDay: form.paymentDay,
@@ -353,6 +360,7 @@ export default function ContractForm({ user, employee, company, department, allE
               onChange={(v) => f("employmentType", v)}
               options={[
                 { value: "正社員", label: "正社員" },
+                { value: "短時間正社員", label: "短時間正社員" },
                 { value: "契約社員", label: "契約社員" },
                 { value: "パートタイマー", label: "パートタイマー" },
                 { value: "アルバイト", label: "アルバイト" },
@@ -531,6 +539,20 @@ export default function ContractForm({ user, employee, company, department, allE
                 <FormField label={form.commuteAllowanceType === "daily" ? "通勤手当（円/日）" : "通勤手当（円/月）"} value={String(form.commuteAllowance || "")} onChange={(v) => f("commuteAllowance", Number(v) || 0)} type="number" />
                 <FormField label="上限（円/月）" value={String(form.commuteAllowanceMax || "")} onChange={(v) => f("commuteAllowanceMax", Number(v) || 0)} type="number" placeholder="0 = 上限なし" />
               </div>
+            </div>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#555" }}>その他の手当</div>
+                <button type="button" onClick={() => f("otherAllowances", [...form.otherAllowances, { name: "", amount: 0 }])} style={{ padding: "2px 10px", fontSize: 11, color: C.navy, background: C.pale, border: "none", borderRadius: 4, cursor: "pointer" }}>+ 追加</button>
+              </div>
+              {form.otherAllowances.map((a, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
+                  <input value={a.name} onChange={(e) => { const arr = [...form.otherAllowances]; arr[i] = { ...arr[i], name: e.target.value }; f("otherAllowances", arr); }} placeholder="手当名（例: 住宅手当）" style={{ flex: 1, padding: "6px 10px", border: "1px solid #e8e2da", borderRadius: 6, fontSize: 13 }} />
+                  <input type="number" value={a.amount || ""} onChange={(e) => { const arr = [...form.otherAllowances]; arr[i] = { ...arr[i], amount: Number(e.target.value) || 0 }; f("otherAllowances", arr); }} placeholder="金額" style={{ width: 100, padding: "6px 10px", border: "1px solid #e8e2da", borderRadius: 6, fontSize: 13 }} />
+                  <span style={{ fontSize: 12, color: C.gray }}>円/月</span>
+                  <button type="button" onClick={() => { const arr = form.otherAllowances.filter((_, j) => j !== i); f("otherAllowances", arr); }} style={{ padding: "2px 8px", fontSize: 11, color: C.red, background: "none", border: "none", cursor: "pointer" }}>✕</button>
+                </div>
+              ))}
             </div>
             <div style={{ padding: "8px 12px", background: C.pale, borderRadius: 6, fontSize: 14, color: C.navy }}>
               総支給額: <strong>{form.totalSalary.toLocaleString()}円</strong>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { C, Company, Contract, Employee } from "@/lib/types";
 
 type Props = {
@@ -8,18 +8,19 @@ type Props = {
   employee: Employee;
   company: Company | null;
   onClose: () => void;
+  autoPdf?: boolean;
 };
 
 const isKoyouType = (type: string) => type === "koyou_muki" || type === "koyou_yuki";
 
-export default function ContractPreview({ contract, employee, company, onClose }: Props) {
+export default function ContractPreview({ contract, employee, company, onClose, autoPdf }: Props) {
   const printRef = useRef<HTMLDivElement>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const isKoyou = isKoyouType(contract.documentType);
   const isYuki = contract.isYuki;
   const title = isKoyou ? "雇用契約書" : "労働条件通知書";
 
-  const handlePdf = async () => {
+  const handlePdf = useCallback(async () => {
     if (!printRef.current) return;
     setPdfLoading(true);
     try {
@@ -30,7 +31,6 @@ export default function ContractPreview({ contract, employee, company, onClose }
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfW = pdf.internal.pageSize.getWidth();
       const pdfH = pdf.internal.pageSize.getHeight();
-      // A4に収まるようにスケーリング（幅・高さの小さい方の比率に合わせる）
       const ratioW = pdfW / canvas.width;
       const ratioH = pdfH / canvas.height;
       const ratio = Math.min(ratioW, ratioH);
@@ -46,11 +46,19 @@ export default function ContractPreview({ contract, employee, company, onClose }
     } finally {
       setPdfLoading(false);
     }
-  };
+  }, [title, employee.name]);
+
+  useEffect(() => {
+    if (autoPdf) {
+      const timer = setTimeout(() => handlePdf(), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [autoPdf, handlePdf]);
 
   const companyName = company?.name || "";
   const companyAddress = company?.address || "";
   const companyRep = company?.representative || "";
+  const companyRepTitle = company?.representativeTitle || "代表取締役";
   const workRulesLocation = company?.workRulesLocation || "";
 
   // 表セルスタイル
@@ -142,11 +150,11 @@ export default function ContractPreview({ contract, employee, company, onClose }
           {/* 雇用契約書: 代表取締役 + 印 右寄せ / 労働条件通知書: 代表取締役 右寄せ */}
           {isKoyou ? (
             <div style={{ textAlign: "right", fontSize: 13, marginBottom: 12 }}>
-              代表取締役　{companyRep}　㊞
+              {companyRepTitle}　{companyRep}　㊞
             </div>
           ) : (
             <div style={{ textAlign: "right", fontSize: 13, marginBottom: 12 }}>
-              代表取締役　{companyRep}
+              {companyRepTitle}　{companyRep}
             </div>
           )}
 
@@ -191,7 +199,7 @@ export default function ContractPreview({ contract, employee, company, onClose }
               <tr>
                 <td style={thStyle}>雇用形態</td>
                 <td style={tdStyle}>
-                  {sel(contract.employmentType, ["正社員", "契約社員", "パートタイマー", "嘱託"])}・その他（{contract.employmentType === "アルバイト" ? <span style={markStyle}>アルバイト</span> : "アルバイト"}）
+                  {sel(contract.employmentType, ["正社員", "短時間正社員", "契約社員", "パートタイマー", "嘱託"])}・その他（{contract.employmentType === "アルバイト" ? <span style={markStyle}>アルバイト</span> : "アルバイト"}）
                 </td>
               </tr>
 
@@ -304,7 +312,7 @@ export default function ContractPreview({ contract, employee, company, onClose }
                     {contract.salaryType === "monthly" && <>基本給（<span style={markStyle}>{contract.basicSalary?.toLocaleString()}</span>円）</>}
                     {contract.salaryType === "hourly" && <>時給（<span style={markStyle}>{contract.hourlyWage?.toLocaleString()}</span>円）</>}
                   </div>
-                  {(contract.fixedOvertimeAmount || contract.commuteAllowance) && (
+                  {(contract.fixedOvertimeAmount || contract.commuteAllowance || contract.otherAllowances?.some((a: { name: string; amount: number }) => a.name && a.amount > 0)) && (
                   <div style={{ marginTop: 4 }}>２　諸手当：</div>
                   )}
                   {contract.fixedOvertimeAmount > 0 && (
@@ -317,6 +325,11 @@ export default function ContractPreview({ contract, employee, company, onClose }
                     {contract.fixedOvertimeAmount > 0 ? "ロ" : "イ"}　通勤手当（<span style={markStyle}>{contract.commuteAllowance.toLocaleString()}</span>円／{contract.commuteAllowanceType === "daily" ? "日" : "月"}{contract.commuteAllowanceMax ? <>　上限<span style={markStyle}>{contract.commuteAllowanceMax.toLocaleString()}</span>円／月</> : ""}　）
                   </div>
                   )}
+                  {contract.otherAllowances?.filter((a: { name: string; amount: number }) => a.name && a.amount > 0).map((a: { name: string; amount: number }, i: number) => {
+                    const iroha = ["イ", "ロ", "ハ", "ニ", "ホ", "ヘ", "ト"];
+                    const idx = (contract.fixedOvertimeAmount > 0 ? 1 : 0) + (contract.commuteAllowance > 0 ? 1 : 0) + i;
+                    return <div key={i}>{iroha[idx] || ""}　{a.name}（<span style={markStyle}>{a.amount.toLocaleString()}</span>円／月）</div>;
+                  })}
                   {contract.salaryType !== "hourly" && (
                   <div style={{ marginTop: 4 }}>
                     総支給額　<span style={markStyle}>{contract.totalSalary?.toLocaleString() || 0}</span>円
