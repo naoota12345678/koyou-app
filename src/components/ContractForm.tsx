@@ -183,7 +183,7 @@ export default function ContractForm({ user, employee, company, department, allE
     let total = 0;
     if (form.salaryType === "monthly") {
       const commuteMonthly = form.commuteAllowanceType === "daily"
-        ? Math.round((form.commuteAllowance || 0) * (form.weeklyDays || 5) * 52 / 12)
+        ? Math.round((form.commuteAllowance || 0) * (form.weeklyDays || 5) * 4.3)
         : (form.commuteAllowance || 0);
       total = (form.basicSalary || 0) + (form.fixedOvertimeAmount || 0) + commuteMonthly + otherAllowancesTotal;
     } else {
