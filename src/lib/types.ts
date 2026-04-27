@@ -125,6 +125,7 @@ export type Contract = {
   commuteAllowanceMax: number;
   otherAllowances: { name: string; amount: number }[];
   totalSalary: number;
+  paymentMethod: string; // "銀行振込" | "現金支給"
   payClosingDay: string;
   paymentDay: string;
   increment: boolean;

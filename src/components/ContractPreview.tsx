@@ -330,7 +330,7 @@ export default function ContractPreview({ contract, employee, company, onClose, 
                     const idx = (contract.fixedOvertimeAmount > 0 ? 1 : 0) + (contract.commuteAllowance > 0 ? 1 : 0) + i;
                     return <div key={i}>{iroha[idx] || ""}　{a.name}（<span style={markStyle}>{a.amount.toLocaleString()}</span>円／月）</div>;
                   })}
-                  {contract.salaryType !== "hourly" && (
+                  {contract.salaryType === "monthly" && contract.commuteAllowanceType !== "daily" && (
                   <div style={{ marginTop: 4 }}>
                     総支給額　<span style={markStyle}>{contract.totalSalary?.toLocaleString() || 0}</span>円
                   </div>
@@ -339,7 +339,7 @@ export default function ContractPreview({ contract, employee, company, onClose, 
                   <div>時間外　法定超　月60時間以内：　125％　　月60時間超：　150％</div>
                   <div>休日　　法定休日：　135％　　深夜：　25％</div>
                   <div style={{ marginTop: 4 }}>４　賃金締切日：{contract.payClosingDay || "毎月末日"}、賃金支払日：{contract.paymentDay || "翌月25日"}</div>
-                  <div>５　支払方法：銀行振込</div>
+                  <div>５　支払方法：{contract.paymentMethod || "銀行振込"}</div>
                   <div>６　賃金支払時の控除：　{contract.hasDeduction === false || contract.hasDeduction === undefined && contract.deductionItems?.length === 0 ? <span style={markStyle}>無</span> : <><span style={markStyle}>有</span>　（{(contract.deductionItems && contract.deductionItems.length > 0 ? contract.deductionItems : ["所得税", "雇用保険", "社会保険"]).join("、")}）</>}</div>
                   <div>７　昇給：　{yesNo(contract.increment)}　〔勤務成績、業績等による〕</div>
                   <div>８　賞与：　{yesNo(contract.bonus)}　〔勤務成績、業績等による〕</div>

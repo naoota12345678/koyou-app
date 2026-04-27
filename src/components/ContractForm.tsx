@@ -60,6 +60,7 @@ type ContractFormData = {
   commuteAllowanceMax: number;
   otherAllowances: { name: string; amount: number }[];
   totalSalary: number;
+  paymentMethod: string;
   payClosingDay: string;
   paymentDay: string;
   increment: boolean;
@@ -155,6 +156,7 @@ export default function ContractForm({ user, employee, company, department, allE
       commuteAllowanceMax: prev?.commuteAllowanceMax || 0,
       otherAllowances: prev?.otherAllowances || [],
       totalSalary: 0,
+      paymentMethod: prev?.paymentMethod || "銀行振込",
       payClosingDay: prev?.payClosingDay || company?.payClosingDay || "末日",
       paymentDay: prev?.paymentDay || company?.paymentDay || "翌月25日",
       increment: prev?.increment ?? company?.incrementDefault ?? true,
@@ -259,6 +261,7 @@ export default function ContractForm({ user, employee, company, department, allE
       commuteAllowanceMax: form.commuteAllowanceMax,
       otherAllowances: form.otherAllowances,
       totalSalary: form.totalSalary,
+      paymentMethod: form.paymentMethod,
       payClosingDay: form.payClosingDay,
       paymentDay: form.paymentDay,
       increment: form.increment,
@@ -376,19 +379,19 @@ export default function ContractForm({ user, employee, company, department, allE
                 { value: "yuki", label: "有期（期間の定めあり）" },
               ]}
             />
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 4 }}>契約開始日（令和）</div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <SmallInput value={form.contractStartYear} onChange={(v) => f("contractStartYear", v)} width={50} />
+                <span style={{ fontSize: 13 }}>年</span>
+                <SmallInput value={form.contractStartMonth} onChange={(v) => f("contractStartMonth", v)} width={50} />
+                <span style={{ fontSize: 13 }}>月</span>
+                <SmallInput value={form.contractStartDay} onChange={(v) => f("contractStartDay", v)} width={50} />
+                <span style={{ fontSize: 13 }}>日</span>
+              </div>
+            </div>
             {form.isYuki ? (
               <>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 4 }}>契約開始日（令和）</div>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <SmallInput value={form.contractStartYear} onChange={(v) => f("contractStartYear", v)} width={50} />
-                    <span style={{ fontSize: 13 }}>年</span>
-                    <SmallInput value={form.contractStartMonth} onChange={(v) => f("contractStartMonth", v)} width={50} />
-                    <span style={{ fontSize: 13 }}>月</span>
-                    <SmallInput value={form.contractStartDay} onChange={(v) => f("contractStartDay", v)} width={50} />
-                    <span style={{ fontSize: 13 }}>日</span>
-                  </div>
-                </div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 4 }}>契約終了日（令和）</div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -554,9 +557,14 @@ export default function ContractForm({ user, employee, company, department, allE
                 </div>
               ))}
             </div>
-            <div style={{ padding: "8px 12px", background: C.pale, borderRadius: 6, fontSize: 14, color: C.navy }}>
-              総支給額: <strong>{form.totalSalary.toLocaleString()}円</strong>
-            </div>
+            {form.salaryType === "monthly" && form.commuteAllowanceType === "monthly" && (
+              <div style={{ padding: "8px 12px", background: C.pale, borderRadius: 6, fontSize: 14, color: C.navy }}>
+                総支給額: <strong>{form.totalSalary.toLocaleString()}円</strong>
+              </div>
+            )}
+            <RadioGroup label="支払方法" value={form.paymentMethod} onChange={(v) => f("paymentMethod", v)} options={[
+              { value: "銀行振込", label: "銀行振込" }, { value: "現金支給", label: "現金支給" },
+            ]} />
             <div style={{ display: "flex", gap: 16 }}>
               <FormField label="賃金締切日" value={form.payClosingDay} onChange={(v) => f("payClosingDay", v)} />
               <FormField label="支払日" value={form.paymentDay} onChange={(v) => f("paymentDay", v)} />
@@ -616,14 +624,17 @@ export default function ContractForm({ user, employee, company, department, allE
             <ConfirmRow label="部署" value={department?.name || "-"} />
             <ConfirmRow label="書類種別" value={documentTypeLabel(documentType)} />
             <ConfirmRow label="雇用形態" value={form.employmentType} />
-            <ConfirmRow label="契約期間" value={form.isYuki ? `令和${form.contractStartYear}年${form.contractStartMonth}月${form.contractStartDay}日〜令和${form.contractEndYear}年${form.contractEndMonth}月${form.contractEndDay}日` : "期間の定めなし"} />
+            <ConfirmRow label="契約開始日" value={`令和${form.contractStartYear}年${form.contractStartMonth}月${form.contractStartDay}日`} />
+            <ConfirmRow label="契約期間" value={form.isYuki ? `〜令和${form.contractEndYear}年${form.contractEndMonth}月${form.contractEndDay}日` : "期間の定めなし"} />
             <ConfirmRow label="就業場所" value={form.workplaceInitial} />
             <ConfirmRow label="業務内容" value={form.jobContentInitial} />
             <ConfirmRow label="勤務時間" value={`${form.startHour}:${form.startMinute}〜${form.endHour}:${form.endMinute}`} />
             <ConfirmRow label="週所定労働" value={`${form.weeklyHours}${form.weeklyHoursMax ? `〜${form.weeklyHoursMax}` : ""}時間 / ${form.weeklyDays}${form.weeklyDaysMax ? `〜${form.weeklyDaysMax}` : ""}日`} />
             <ConfirmRow label="休日" value={form.holidayType === "固定" ? `毎週${form.holidayFixedDays.join("・")}曜日` : form.holidayType === "自由記載" ? form.holidayNote : "シフトによる休日"} />
             <ConfirmRow label="賃金" value={form.salaryType === "monthly" ? `月給 ${form.basicSalary.toLocaleString()}円` : `時給 ${form.hourlyWage.toLocaleString()}円`} />
-            <ConfirmRow label="総支給額" value={`${form.totalSalary.toLocaleString()}円`} />
+            {form.salaryType === "monthly" && form.commuteAllowanceType === "monthly" && (
+              <ConfirmRow label="総支給額" value={`${form.totalSalary.toLocaleString()}円`} />
+            )}
             <ConfirmRow label="社会保険" value={finalSocial ? "加入" : "非加入"} color={finalSocial ? C.green : C.red} />
             <ConfirmRow label="雇用保険" value={finalEmployment ? "加入" : "非加入"} color={finalEmployment ? C.green : C.red} />
           </div>
